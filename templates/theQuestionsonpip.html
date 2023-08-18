@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>the questions on pip</title>
+    <title>theQuestionsOnPip</title>
     <style>
         .tit{
             text-align:center;
@@ -11,12 +11,15 @@
             color:blue;
         }
         a:link {color: black}
-        a:visited {color: blue}
+        a:visited {color: black}
         a:hover {color: black}
         a:active {color: black}
     </style>
+    <base target="_blank">
 </head>
 <body>
+    <div>开篇提示</div>
+    <div style="color:red;">以下安装code尽可能使用清华源</div>
     <div class="tit">
         <div>
             <div>   <b style="font-size:40px;color:red;">pytorch-gup安装</b>   </div>
@@ -39,21 +42,21 @@
                         <li>
                             <div>
                                 <span>打开网址：</span>
-                                <a href="https://download.pytorch.org/whl/cu102" target="_blank">https://download.pytorch.org/whl/cu102</a>
+                                <a href="https://download.pytorch.org/whl/cu102">https://download.pytorch.org/whl/cu102</a>
                             </div>
                             <img src="../static/ICS/2.webp">
                             <div>首先选择torch，ctrl + F 搜索 [cu102-cp38-cp38-win] 这里cu102 是我们下载的 CUDA 10.2 版本，cp38-cp38 是说我们的 Python 版本是 3.8。如果要安装python3.9那将cp3.8改为cp3.9即可。</div>
                             <img src="../static/ICS/3.webp">
                             <div>
                                 <span>单击即可下载，这里强烈建议改换手机热点进行下载，速度很快。这里torch版本为1.10.0，我们要去</span>
-                                <a href="https://download.pytorch.org/whl/cu102" target="_blank">官网</a>
+                                <a href="https://download.pytorch.org/whl/cu102">官网</a>
                                 <span>查找该版本对应的torchvision 和torchaudio版本。ctrl + F 搜索 [pip install torch==1.10.0] 并且对应cuda为10.2。</span>
                             </div>
                             <img src="../static/ICS/4.webp">
                             <div>因此torchvision需要安装0.11.0版本，torchaudio需要安装0.10.0版本。</div>
                             <div>
                                 <span>在之前的</span>
-                                <a href="https://download.pytorch.org/whl/cu102" target="_blank">网址</a>
+                                <a href="https://download.pytorch.org/whl/cu102">网址</a>
                                 <span>中选择torchaudio，ctrl + F 搜索 [cu102-cp38-cp38-win]，选择版本为0.10.0的。高亮处单击下载。</span>
                             </div>
                             <img src="../static/ICS/5.png">
@@ -95,21 +98,51 @@
                         </li>
                     </ol>
                 </li>
-
-
-
-
-
-
-
-
-
-
-
-
-
             </ol>
         </div>
+        <div style="line-height:30px;"><br /></div>
+        <div>
+            <div>   <b style="font-size:40px;color:red;">sklearn安装</b>   </div>
+            <div style="text-align:left;font-size:30px;"><code>pip install scikit-learn -i https://pypi.tuna.tsinghua.edu.cn/simple</code></div>
+        </div>
+        <div style="line-height:30px;"><br /></div>
+        <div>
+            <div>   <b style="font-size:40px;color:red;">graphviz安装</b>   </div>
+            <ol type="I" style="text-align:left;font-size:30px;">
+                <li>
+                    <div>
+                        <span>点击链接下载安装包</span>
+                        <a href="https://graphviz.gitlab.io/_pages/Download/windows/graphviz-2.38.msi">graphviz-2.38.msi</a>
+                    </div>
+                    <div><img src="../static/ICS/14.png" ></div>
+                </li>
+                <li>
+                    <div>双击下载好的msi文件，然后一直选择Next，默认安装在C盘的Program Files（x86）下，详细安装步骤如下所示：</div>
+                    <div><img src="../static/ICS/15.png" ></div>
+                    <div><img src="../static/ICS/16.png" ></div>
+                    <div><img src="../static/ICS/17.png" ></div>
+                    <div><img src="../static/ICS/18.png" ></div>
+                    <div><img src="../static/ICS/19.png" ></div>
+                </li>
+                <li>
+                    <div>配置环境变量：计算机→属性→高级系统设置→高级→环境变量→系统变量→path，在path中加入路径：C:\Program Files (x86)\Graphviz2.38\bin</div>
+                    <div><img src="../static/ICS/20.png" ></div>
+                </li>
+                <li>
+                    <div>验证安装：在cmd命令行界面，输入dot -version，然后按回车，如果显示如下图所示的graphviz相关版本信息，则代表安装配置成功！</div>
+                    <div><img src="../static/ICS/21.png" ></div>
+                </li>
+                <li>
+                    <div>
+                        <span>如果我们需要在Python中直接将.dot文件转成pdf显示出来，就需要导入库，安装库也很简单，只需要执行</span>
+                        <code>pip install graphviz</code>
+                        <span>即可。</span>
+                    </div>
+                    <div><img src="../static/ICS/22.png" ></div>
+                </li>
+            </ol>
+        </div>
+        <div style="line-height:30px;"><br /></div>
     </div>
 </body>
 </html>
