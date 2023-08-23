@@ -294,5 +294,414 @@
             <img src="../static/Math/mathematicalModeling/5.png">
         </li>
     </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">Lagrange乘数法</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>这里由于没有数据，先生成实验数据</div>
+            <div>生成曲线数据方法如下：</div>
+            <pre id="code_block">
+                <span><code>import numpy as np</code></span>
+                <span><code></code></span>
+                <span><code>x = np.linspace(0,5,10)</code></span>
+                <span><code>y = 2*x</code></span>
+                <span><code>r = np.random.RandomState(42)</code></span>
+                <span><code>y += r.randn(10)</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/6.png"></div>
+        </li>
+        <li>
+            <div>Lagrange乘数法的实现</div>
+            <pre id="code_block">
+                <span><code>def p(args, ex):</code></span>
+                <span><code>    def loop(largs):</code></span>
+                <span><code>        if len(largs) == 1: return [1, -largs[0]]</code></span>
+                <span><code>        dp = loop(largs[1:])</code></span>
+                <span><code>        return [-largs[0] * i + j for i, j in zip([0] + dp, dp + [0])]</code></span>
+                <span><code></code></span>
+                <span><code>    largs = list(args)</code></span>
+                <span><code>    largs.remove(ex)</code></span>
+                <span><code>    div = 1</code></span>
+                <span><code>    for i in largs:</code></span>
+                <span><code>        div *= ex[0] - i[0]</code></span>
+                <span><code>    return [i * ex[1] / div for i in loop(list(zip(*largs))[0])]</code></span>
+                <span><code></code></span>
+                <span><code></code></span>
+                <span><code>def Lagrange(*args):</code></span>
+                <span><code>    lists = [p(args, i) for i in args]</code></span>
+                <span><code>    ans = [sum(i) for i in zip(*lists)]</code></span>
+                <span><code>    ans.reverse()</code></span>
+                <span><code></code></span>
+                <span><code>    def rtn_func(x):</code></span>
+                <span><code>        return sum([a * x ** i for i, a in enumerate(ans)])</code></span>
+                <span><code></code></span>
+                <span><code>    return rtn_func</code></span>
+            </pre>
+        </li>
+        <li>
+            <div>拟合分析</div>
+            <pre id="code_block">
+                <span><code>func = Lagrange(*zip(x, y))</code></span>
+                <span><code>x = np.arange(0, 5.1, 0.1)</code></span>
+                <span><code>y = [func(i) for i in x]</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/7.png"></div>
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">退火算法</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解：</div>
+            <div style="text-indent:2em;">假设前一个状态为x(n),系统根据某一指标（梯度下降，上节的能量），状态变为x(n+1),相应的，系统的能量由E(n)变为E(n+1),定义系统由x(n)变为x(n+1)的接受概率P为：</div>
+            <div><img src="../static/Math/mathematicalModeling/8.png"></div>
+
+            <div style="text-indent:2em;">从上式我们可以看到，如果能量减小了，那么这种转移就被接受（概率为1），如果能量增大了，就说明系统偏离全局最优值位置更远了，此时算法不会立刻将其抛弃，而是进行概率操作：首先在区间【0,1】产生一个均匀分布的随机数ϵ，如果ϵ&lt;P，则此种转移接受，否则拒绝转移，进入下一步，往复循环。其中P以能量的变化量和T进行决定概率P的大小，所以这个值是动态的。</div>
+            <div style="text-indent:2em;">用固体退火模拟组合优化问题，将内能E模拟为目标函数值f，温度T演化成控制参数t，即得到解组合优化问题的模拟退火算法：由初始解i和控制参数初值t开始，对当前解重复“产生新解→计算目标函数差→接受或舍弃”的迭代，并逐步衰减t值，算法终止时的当前解即为所得近似最优解，退火过程由冷却进度表(Cooling Schedule)控制，包括控制参数的初值t及其衰减因子Δt、每个t值时的迭代次数L和停止条件Tf。而温度的作用就是来计算转移概率P的。当温度每次下降后，转移概率也发生变化，因此在所有温度下迭代L次的结果也都是不相同的。在每个温度下迭代L次来寻找当前温度下的最优解，然后降低温度继续寻找，直到到达终止温度，即转移概率P接近于0</div>
+            <div style="text-indent:2em;">接受状态的三条原则：</div>
+            <ol style="1">
+                <li>在固定温度下，接受使目标函数下降的候选解的概率要大于使目标函数上升的候选解概率；</li>
+                <li>随着温度的下降，接受使目标函数上升的解的概率要逐渐减小；</li>
+                <li>当温度趋于零时，只能接受目标函数下降的解。</li>
+            </ol>
+        </li>
+        <li>
+            <div>流程分析</div>
+            <div><img src="../static/Math/mathematicalModeling/9.png"></div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div><img src="../static/Math/mathematicalModeling/10.png"></div>
+            <pre id="code_block">
+                <span><code>import numpy as np</code></span>
+                <span><code>from random import random</code></span>
+                <span><code>import matplotlib.pyplot as plt</code></span>
+                <span><code></code></span>
+                <span><code></code></span>
+                <span><code>def func(x, y):  # 函数优化问题</code></span>
+                <span><code>    res = 4 * x ** 2 - 2.1 * x ** 4 + x ** 6 / 3 + x * y - 4 * y ** 2 + 4 * y ** 4</code></span>
+                <span><code>    return res</code></span>
+                <span><code></code></span>
+                <span><code></code></span>
+                <span><code># x为公式里的x1,y为公式里面的x2</code></span>
+                <span><code>class SA:</code></span>
+                <span><code>    def __init__(self, func, iter=100, T0=100, Tf=0.01, alpha=0.99):</code></span>
+                <span><code>        self.func = func</code></span>
+                <span><code>        self.iter = iter  # 内循环迭代次数,即为L =100</code></span>
+                <span><code>        self.alpha = alpha  # 降温系数，alpha=0.99</code></span>
+                <span><code>        self.T0 = T0  # 初始温度T0为100</code></span>
+                <span><code>        self.Tf = Tf  # 温度终值Tf为0.01</code></span>
+                <span><code>        self.T = T0  # 当前温度</code></span>
+                <span><code>        self.x = [random() * 11 - 5 for i in range(iter)]  # 随机生成100个x的值</code></span>
+                <span><code>        self.y = [random() * 11 - 5 for i in range(iter)]  # 随机生成100个y的值</code></span>
+                <span><code>        self.most_best = []</code></span>
+                <span><code>        """</code></span>
+                <span><code>        random()这个函数取0到1之间的小数</code></span>
+                <span><code>        如果你要取0-10之间的整数（包括0和10）就写成 (int)random()*11就可以了，11乘以零点多的数最大是10点多，最小是0点多</code></span>
+                <span><code>        该实例中x1和x2的绝对值不超过5（包含整数5和-5），（random() * 11 -5）的结果是-6到6之间的任意值（不包括-6和6）</code></span>
+                <span><code>        （random() * 10 -5）的结果是-5到5之间的任意值（不包括-5和5），所有先乘以11，取-6到6之间的值，产生新解过程中，用一个if条件语句把-5到5之间（包括整数5和-5）的筛选出来。</code></span>
+                <span><code>        """</code></span>
+                <span><code>        self.history = {'f': [], 'T': []}</code></span>
+                <span><code></code></span>
+                <span><code>    def generate_new(self, x, y):  # 扰动产生新解的过程</code></span>
+                <span><code>        while True:</code></span>
+                <span><code>            x_new = x + self.T * (random() - random())</code></span>
+                <span><code>            y_new = y + self.T * (random() - random())</code></span>
+                <span><code>            if (-5 <= x_new <= 5) & (-5 <= y_new <= 5):</code></span>
+                <span><code>                break  # 重复得到新解，直到产生的新解满足约束条件</code></span>
+                <span><code>        return x_new, y_new</code></span>
+                <span><code></code></span>
+                <span><code>    def Metrospolis(self, f, f_new):  # Metropolis准则</code></span>
+                <span><code>        if f_new <= f:</code></span>
+                <span><code>            return 1</code></span>
+                <span><code>        else:</code></span>
+                <span><code>            p = np.exp((f - f_new) / self.T)</code></span>
+                <span><code>            if random() < p:</code></span>
+                <span><code>                return 1</code></span>
+                <span><code>            else:</code></span>
+                <span><code>                return 0</code></span>
+                <span><code></code></span>
+                <span><code>    def best(self):  # 获取最优目标函数值</code></span>
+                <span><code>        f_list = []  # f_list数组保存每次迭代之后的值</code></span>
+                <span><code>        for i in range(self.iter):</code></span>
+                <span><code>            f = self.func(self.x[i], self.y[i])</code></span>
+                <span><code>            f_list.append(f)</code></span>
+                <span><code>        f_best = min(f_list)</code></span>
+                <span><code></code></span>
+                <span><code>        idx = f_list.index(f_best)</code></span>
+                <span><code>        return f_best, idx  # f_best,idx分别为在该温度下，迭代L次之后目标函数的最优解和最优解的下标</code></span>
+                <span><code></code></span>
+                <span><code>    def run(self):</code></span>
+                <span><code>        count = 0</code></span>
+                <span><code>        # 外循环迭代，当前温度小于终止温度的阈值</code></span>
+                <span><code>        while self.T > self.Tf:</code></span>
+                <span><code></code></span>
+                <span><code>            # 内循环迭代100次</code></span>
+                <span><code>            for i in range(self.iter):</code></span>
+                <span><code>                f = self.func(self.x[i], self.y[i])  # f为迭代一次后的值</code></span>
+                <span><code>                x_new, y_new = self.generate_new(self.x[i], self.y[i])  # 产生新解</code></span>
+                <span><code>                f_new = self.func(x_new, y_new)  # 产生新值</code></span>
+                <span><code>                if self.Metrospolis(f, f_new):  # 判断是否接受新值</code></span>
+                <span><code>                    self.x[i] = x_new  # 如果接受新值，则把新值的x,y存入x数组和y数组</code></span>
+                <span><code>                    self.y[i] = y_new</code></span>
+                <span><code>            # 迭代L次记录在该温度下最优解</code></span>
+                <span><code>            ft, _ = self.best()</code></span>
+                <span><code>            self.history['f'].append(ft)</code></span>
+                <span><code>            self.history['T'].append(self.T)</code></span>
+                <span><code>            # 温度按照一定的比例下降（冷却）</code></span>
+                <span><code>            self.T = self.T * self.alpha</code></span>
+                <span><code>            count += 1</code></span>
+                <span><code></code></span>
+                <span><code>            # 得到最优解</code></span>
+                <span><code>        f_best, idx = self.best()</code></span>
+                <span><code>        print(f"F={f_best}, x={self.x[idx]}, y={self.y[idx]}")</code></span>
+                <span><code></code></span>
+                <span><code></code></span>
+                <span><code>sa = SA(func)</code></span>
+                <span><code>sa.run()</code></span>
+            </pre>
+            <div>结果如下</div>
+            <div><img src="../static/Math/mathematicalModeling/11.png"></div>
+            <div>退火过程可视化</div>
+            <div>代码</div>
+            <pre id="code_block">
+                <span><code>plt.plot(sa.history['T'], sa.history['f'])</code></span>
+                <span><code>plt.title('SA')</code></span>
+                <span><code>plt.xlabel('T')</code></span>
+                <span><code>plt.ylabel('f')</code></span>
+                <span><code>plt.gca().invert_xaxis()</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/12.png"></div>
+        </li>
+        <li>
+            <div>解最小值问题</div>
+            <div>解上述问题</div>
+            <pre id="code_block">
+                <span><code>from sko.SA import SA</code></span>
+                <span><code>def demo_func(x):</code></span>
+                <span><code>    x1, x2 = x</code></span>
+                <span><code>    return 4 * x1 ** 2 - 2.1 * x1 ** 4 + x1 ** 6 / 3 + x1 * x2 - 4 * x2 ** 2 + 4 * x2 ** 4</code></span>
+                <span><code></code></span>
+                <span><code>sa = SA(func=demo_func, x0=[1, 1])</code></span>
+                <span><code>x_star, y_star = sa.run()</code></span>
+                <span><code>print(x_star, y_star)</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/13.png"></div>
+            <div>退火过程可视化</div>
+            <pre id="code_block">
+                <span><code>import matplotlib.pyplot as plt</code></span>
+                <span><code>import pandas as pd</code></span>
+                <span><code></code></span>
+                <span><code>plt.plot(pd.DataFrame(sa.best_y_history).cummin(axis=0))</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/14.png"></div>
+        </li>
+        <li>
+            <div>旅行商问题</div>
+            <pre id="code_block">
+                <span><code>import numpy as np</code></span>
+                <span><code>from scipy import spatial</code></span>
+                <span><code>import matplotlib.pyplot as plt</code></span>
+                <span><code></code></span>
+                <span><code>num_points = 50</code></span>
+                <span><code></code></span>
+                <span><code>points_coordinate = np.random.rand(num_points, 2)  # 生成点坐标</code></span>
+                <span><code>distance_matrix = spatial.distance.cdist(points_coordinate, points_coordinate, metric='euclidean')  # 距离矩阵</code></span>
+                <span><code></code></span>
+                <span><code></code></span>
+                <span><code>def cal_total_distance(routine):</code></span>
+                <span><code>    """</code></span>
+                <span><code>    The objective function. input routine, return total distance.</code></span>
+                <span><code>    cal_total_distance(np.arange(num_points))</code></span>
+                <span><code>    """</code></span>
+                <span><code>    num_points, = routine.shape</code></span>
+                <span><code>    return sum([distance_matrix[routine[i % num_points], routine[(i + 1) % num_points]] for i in range(num_points)])</code></span>
+                <span><code></code></span>
+                <span><code>from sko.SA import SA_TSP</code></span>
+                <span><code></code></span>
+                <span><code>sa_tsp = SA_TSP(func=cal_total_distance, x0=range(num_points),T_max=100,T_min=1,L=10*num_points)</code></span>
+                <span><code></code></span>
+                <span><code>best_points, best_distance = sa_tsp.run()</code></span>
+                <span><code>print(best_points, best_distance)</code></span>
+            </pre>
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>from matplotlib.ticker import FormatStrFormatter</code></span>
+                <span><code></code></span>
+                <span><code>fig, ax = plt.subplots(1, 2)</code></span>
+                <span><code>best_points_ = np.concatenate([best_points, [best_points[0]]])</code></span>
+                <span><code>best_points_coordinate = points_coordinate[best_points_, :]</code></span>
+                <span><code>ax[0].plot(sa_tsp.best_y_history)</code></span>
+                <span><code>ax[0].set_xlabel("Iteration")</code></span>
+                <span><code>ax[0].set_ylabel("Distance")</code></span>
+                <span><code>ax[1].plot(best_points_coordinate[:, 0], best_points_coordinate[:, 1],</code></span>
+                <span><code>           marker='o', markerfacecolor='b', color='c', linestyle='-')</code></span>
+                <span><code>ax[1].xaxis.set_major_formatter(FormatStrFormatter('%.3f'))</code></span>
+                <span><code>ax[1].yaxis.set_major_formatter(FormatStrFormatter('%.3f'))</code></span>
+                <span><code>ax[1].set_xlabel("Longitude")</code></span>
+                <span><code>ax[1].set_ylabel("Latitude")</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/15.png"></div>
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">差分进化算法</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <ol type="i">
+                <li>
+                    <div>初始化参数</div>
+                    <div>在差分进化算法中，有几个参数比较重要，突变参数F，交叉概率Cr，种群数Np，个体维度D；这里需要注意F，Cr的取值范围通常在（0，1），但是不意味不能取超过1，这是在大多数的情况都是取（0，1）。关于种群数和个体的关系通常是Np=5D~10D，种群数也是影响整体算法的因素之一。初始化种群之后，接下来进行初始化种群。</div>
+                </li>
+                <li>
+                    <div>初始种群</div>
+                    <div>初始化种群X通常需要结合决策空间的上界和下届，分别为xmax,xmin，具体的计算如下：</div>
+                    <img src="../static/Math/mathematicalModeling/16.png">
+                    <div>这样以决策空间边界的初始种群被建立，用于后期的变异，交叉。其中xmax(j)，xmin(j)表示决策空间j的上界和下届。</div>
+                </li>
+                <li>
+                    <div>种群变异</div>
+                    <div>经历了初始化种群之后，对其进行变异产生变异向量，为后期的产生子代种群建立基础。具体的变异操作如下：</div>
+                    <img src="../static/Math/mathematicalModeling/17.png">
+                    <div>其中g表示第g代的变异向量i个体，r1,r2,r3为常量指标。</div>
+                </li>
+                <li>
+                    <div>种群的交叉</div>
+                    <div>种群的交叉是为了产生多样性的子代向量，增强种群的多样性，使结构更加复杂，促使种群的结构化差异。具体的计算公式如下：</div>
+                    <img src="../static/Math/mathematicalModeling/18.png">
+                    <div>进行种群的交叉之后，为了挑选出最优子代，接下来将进行选择操作。</div>
+                </li>
+                <li>
+                    <div>最优种群的选择</div>
+                    <div>为使种群能从中挑选出最优子代，将执行贪婪选择操作。具体计算公式如下：</div>
+                    <img src="../static/Math/mathematicalModeling/19.png">
+                </li>
+            </ol>
+        </li>
+        <li>
+            <div>约束优化问题</div>
+            <div>约束函数如下</div>
+            <pre id="code_block">
+                <span><code>"""</code></span>
+                <span><code>min f(x1, x2, x3) = x1^2 + x2^2 + x3^2</code></span>
+                <span><code>s.t.</code></span>
+                <span><code>    x1*x2 >= 1</code></span>
+                <span><code>    x1*x2 <= 5</code></span>
+                <span><code>    x2 + x3 = 1</code></span>
+                <span><code>    0 <= x1, x2, x3 <= 5</code></span>
+                <span><code>"""</code></span>
+            </pre>
+            <div>构建约束函数</div>
+            <pre id="code_block">
+                <span><code>def obj_func(p):</code></span>
+                <span><code>    x1, x2, x3 = p</code></span>
+                <span><code>    return x1 ** 2 + x2 ** 2 + x3 ** 2</code></span>
+                <span><code></code></span>
+                <span><code></code></span>
+                <span><code>constraint_eq = [</code></span>
+                <span><code>    lambda x: 1 - x[1] - x[2]</code></span>
+                <span><code>]</code></span>
+                <span><code></code></span>
+                <span><code>constraint_ueq = [</code></span>
+                <span><code>    lambda x: 1 - x[0] * x[1],</code></span>
+                <span><code>    lambda x: x[0] * x[1] - 5</code></span>
+                <span><code>]</code></span>
+            </pre>
+            <div>利用差分进化算法求解</div>
+            <pre id="code_block">
+                <span><code>from sko.DE import DE</code></span>
+                <span><code></code></span>
+                <span><code>de = DE(func=obj_func, n_dim=3, size_pop=50, max_iter=800, lb=[0, 0, 0], ub=[5, 5, 5],</code></span>
+                <span><code>        constraint_eq=constraint_eq, constraint_ueq=constraint_ueq)</code></span>
+                <span><code></code></span>
+                <span><code>best_x, best_y = de.run()</code></span>
+                <span><code>print('best_x:', best_x, '\n' + 'best_y:', best_y)</code></span>
+            </pre>
+            <div>结果如下</div>
+            <img src="../static/Math/mathematicalModeling/20.png">
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">遗传算法</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <div>遗传算法（Genetic Algorithm，简称GA）起源于对生物系统所进行的计算机模拟研究，是一种随机全局搜索优化方法，它模拟了自然选择和遗传中发生的复制、交叉(crossover)和变异(mutation)等现象，从任一初始种群（Population）出发，通过随机选择、交叉和变异操作，产生一群更适合环境的个体，使群体进化到搜索空间中越来越好的区域，这样一代一代不断繁衍进化，最后收敛到一群最适应环境的个体（Individual），从而求得问题的优质解。</div>
+        </li>
+        <li>
+            <div>流程分析</div>
+            <img src="../static/Math/mathematicalModeling/21.png">
+        </li>
+        <li>
+            <div>解最小值问题</div>
+            <div>定义函数</div>
+            <pre id="code_block">
+                <span><code>import numpy as np</code></span>
+                <span><code></code></span>
+                <span><code>def schaffer(p):</code></span>
+                <span><code>    """</code></span>
+                <span><code>    This function has plenty of local minimum, with strong shocks</code></span>
+                <span><code>    global minimum at (0,0) with value 0</code></span>
+                <span><code>    """</code></span>
+                <span><code>    x1, x2 = p</code></span>
+                <span><code>    x = np.square(x1) + np.square(x2)</code></span>
+                <span><code>    return 0.5 + (np.sin(x) - 0.5) / np.square(1 + 0.001 * x)</code></span>
+            </pre>
+            <div>求解</div>
+            <pre id="code_block">
+                <span><code>from sko.GA import GA</code></span>
+                <span><code></code></span>
+                <span><code>ga = GA(func=schaffer, n_dim=2, size_pop=50, max_iter=800, lb=[-1, -1], ub=[1, 1], precision=1e-7)</code></span>
+                <span><code>best_x, best_y = ga.run()</code></span>
+                <span><code>print('best_x:', best_x, '\n' + 'best_y:', best_y)</code></span>
+            </pre>
+            <div>结果如下</div>
+            <img src="../static/Math/mathematicalModeling/21.png">
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>import pandas as pd</code></span>
+                <span><code>import matplotlib.pyplot as plt</code></span>
+                <span><code></code></span>
+                <span><code>Y_history = pd.DataFrame(ga.all_history_Y)</code></span>
+                <span><code>fig, ax = plt.subplots(2, 1)</code></span>
+                <span><code>ax[0].plot(Y_history.index, Y_history.values, '.', color='red')</code></span>
+                <span><code>Y_history.min(axis=1).cummin().plot(kind='line')</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <img src="../static/Math/mathematicalModeling/22.png">
+        </li>
+        <li>
+            <div>旅行商问题</div>
+            <div>数据生成办法同退火算法</div>
+            <div>求解</div>
+            <pre id="code_block">
+                <span><code>from sko.GA import GA_TSP</code></span>
+                <span><code></code></span>
+                <span><code>ga_tsp = GA_TSP(func=cal_total_distance, n_dim=num_points, size_pop=50, max_iter=2000, prob_mut=1)</code></span>
+                <span><code>best_points, best_distance = ga_tsp.run()</code></span>
+                <span><code>print(best_points,best_distance)</code></span>
+            </pre>
+            <div>结果如下</div>
+            <img src="../static/Math/mathematicalModeling/24.png">
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>fig, ax = plt.subplots(1, 2)</code></span>
+                <span><code>best_points_ = np.concatenate([best_points, [best_points[0]]])</code></span>
+                <span><code>best_points_coordinate = points_coordinate[best_points_, :]</code></span>
+                <span><code>ax[0].plot(best_points_coordinate[:, 0], best_points_coordinate[:, 1], 'o-r')</code></span>
+                <span><code>ax[1].plot(ga_tsp.generation_best_Y)</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <img src="../static/Math/mathematicalModeling/25.png">
+        </li>
+    </ol>
 </body>
 </html>
