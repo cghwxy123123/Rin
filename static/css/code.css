@@ -1,0 +1,117 @@
+#code_block {
+    background: #2d2d2d;
+    color: rgb(201,209,217);
+    font-family: Consolas;
+    text-align: left;
+    padding: 1em;
+    padding-left: 0.8em;
+    margin: 1em;
+    border-radius: 5px;
+    counter-reset: line;
+    white-space: normal;
+    word-spacing: normal;
+    word-break: normal;
+    word-wrap: normal;
+    line-height: 1.5;
+    width: calc(100% - 63px);
+    overflow-x: auto;
+}
+
+#code_block code {
+    font-family: Consolas;
+}
+
+
+#code_block .comma,
+.keyword,
+.escape_sequence,
+f-string
+{
+    color: rgb(204,120,50);
+}
+
+#code_block .built-in_name
+{
+    color: rgb(136,136,198);
+}
+
+#code_block .class_definition,
+.parameter,
+.type
+{
+    color: rgb(169,183,198);
+}
+
+#code_block .decorator
+{
+    color: rgb(187,181,41);
+}
+
+#code_block .text
+{
+    color: rgb(98,157,85);
+}
+
+#code_block .tag
+{
+    color: rgb(98,157,85);
+    text-decoration-color: rgb(98,157,85);
+    font-style: oblique;
+}
+
+#code_block .function_call,
+.method_call
+{
+    color: rgb(255,198，109)
+}
+
+#code_block .keyword_argument{
+    color: rgb(170,73,38)
+}
+
+#code_block .line_comment{
+    color: rgb(128,128,128)
+}
+
+#code_block .number{
+    color: rgb(104,151,187)
+}
+
+#code_block .self{
+    color: rgb(148,85,141)
+}
+
+#code_block .special_name{
+    color: rgb(178,0,178)
+}
+
+#code_block .binary{
+    color: rgb(165,194,97)
+}
+
+#code_block .string{
+    color: rgb(106,135,89)
+}
+
+
+/*#code_block .note {
+    color: rgb(139,148,158);
+}*/
+
+#code_block span {
+    display: block;
+    line-height: 1.5rem;
+    white-space: pre;
+}
+
+#code_block span:before {
+    counter-increment: line;
+    content: counter(line);
+    display: inline-block;
+    width: 3em;
+    text-align: right;
+    border-right: 2px solid #999;
+    padding-right: .8em;
+    margin-right: 1em;
+    color: #999;
+}
