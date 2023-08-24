@@ -1265,8 +1265,180 @@
             </pre>
             <img src="../static/Math/mathematicalModeling/46.png">
         </li>
-
     </ol>
-
+    <div class="tit">
+        <span style="color:red;font-size:40px;">GS（Gale-Shapley）算法</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>算法原理</div>
+            <div>设有ABCD四个女生，WXYZ四个男生，设法在他们之间建立一个完美匹配M，要求每位女生只能有一个男生，每位男生只能有一个女生，而且不能出现不稳定的情况.</div>
+            <div>所谓不稳定的情况是指: 假设匹配中包含A-W与B-X，但是W在现在匹配的A与未匹配的B之中更喜欢B，同时B在现在匹配的X与未匹配的W之中更青睐W，所以W和B将会私下在一起，并解除关系。</div>
+            <div>为了解决这个问题，有如下算法：</div>
+            <ol type="i">
+                <li>
+                    <div>第一个男生向他所理想的第一位女生发出apply，由于女生此时尚未收到其他男生的apply，所以她选择接受</div>
+                </li>
+                <li>
+                    <div>第二个男生向他所理想的第一位女生发出apply，假设(if)此人此时尚未收到其他男生的apply，则她选择接受；否则，若(else if)此人此时已经收到其他男生的apply，但是她更加偏好已经在一起的男生，则他选择拒绝；再或者(else)此人此时虽然收到了apply，但是她更加偏好新来的男生，则她选择毁掉之前的关系，接受这个男生</div>
+                </li>
+                <li>
+                    <div>其他的男生将按照Step2中的样子继续执行，当条件：存在某个男生没有匹配同时还没有向所有女生发apply不满足时，算法终止</div>
+                </li>
+            </ol>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <pre id="code_block">
+                <span><code>class GS:</code></span>
+                <span><code>    def __init__(self, girls=None, boys=None):</code></span>
+                <span><code>        self.girls = girls</code></span>
+                <span><code>        self.boys = boys</code></span>
+                <span><code></code></span>
+                <span><code>    @staticmethod</code></span>
+                <span><code>    def _shuffle(arr, random_state=None):</code></span>
+                <span><code>        from random import shuffle</code></span>
+                <span><code>        if random_state is not None:</code></span>
+                <span><code>            from random import seed</code></span>
+                <span><code>            seed(random_state)</code></span>
+                <span><code>        arr_new = arr.copy()</code></span>
+                <span><code>        shuffle(arr_new)</code></span>
+                <span><code>        return arr_new</code></span>
+                <span><code></code></span>
+                <span><code>    def random(self, n_girls, n_boys, random_state=None):</code></span>
+                <span><code>        if random_state is not None:</code></span>
+                <span><code>            from random import seed, randint</code></span>
+                <span><code>            seed(random_state)</code></span>
+                <span><code>            random_seed = [randint(0, 100) for _ in range(max(n_boys, n_girls))]</code></span>
+                <span><code>        else:</code></span>
+                <span><code>            random_seed = [None] * max(n_boys, n_girls)</code></span>
+                <span><code>        self.girls = [self._shuffle([*range(n_boys)], random_seed[i]) for i in range(n_girls)]</code></span>
+                <span><code>        self.boys = [self._shuffle([*range(n_girls)], random_seed[i]) for i in range(n_boys)]</code></span>
+                <span><code></code></span>
+                <span><code>    @property</code></span>
+                <span><code>    def n_girls(self):</code></span>
+                <span><code>        return len(self.girls)</code></span>
+                <span><code></code></span>
+                <span><code>    @property</code></span>
+                <span><code>    def n_boys(self):</code></span>
+                <span><code>        return len(self.boys)</code></span>
+                <span><code></code></span>
+                <span><code>    @staticmethod</code></span>
+                <span><code>    def findBest(boyArr, girlChoose):</code></span>
+                <span><code>        for g in girlChoose:</code></span>
+                <span><code>            if g in boyArr:</code></span>
+                <span><code>                return g</code></span>
+                <span><code></code></span>
+                <span><code>    def run(self):</code></span>
+                <span><code>        if self.n_boys == self.n_girls:</code></span>
+                <span><code>            container = [[] for _ in range(self.n_girls)]</code></span>
+                <span><code>            for index, boy in enumerate(self.boys):</code></span>
+                <span><code>                container[boy[0]].append(boy + [index, 0])</code></span>
+                <span><code>            while True:</code></span>
+                <span><code>                for index, cont in enumerate(container):</code></span>
+                <span><code>                    if len(cont) == 0:</code></span>
+                <span><code>                        continue</code></span>
+                <span><code>                    if len(cont) > 1:</code></span>
+                <span><code>                        boys_arr = [c[-2] for c in cont]</code></span>
+                <span><code>                        boyChooseId = self.findBest(boys_arr, self.girls[index])</code></span>
+                <span><code>                        for c in cont:</code></span>
+                <span><code>                            if c[-2] != boyChooseId:</code></span>
+                <span><code>                                c[-1] += 1</code></span>
+                <span><code>                                container[c[c[-1]]].append(c)</code></span>
+                <span><code>                            else:</code></span>
+                <span><code>                                boyChoose = c.copy()</code></span>
+                <span><code>                        container[index] = [boyChoose.copy()]</code></span>
+                <span><code>                        break</code></span>
+                <span><code>                else:</code></span>
+                <span><code>                    break</code></span>
+                <span><code>            self.boys = [cont[0][:-2] for cont in container]</code></span>
+                <span><code>            ans = {value: cont[0][-2] for value, cont in enumerate(container)}</code></span>
+                <span><code>            ans['girls'] = 'boys'</code></span>
+                <span><code>            return ans</code></span>
+                <span><code>        elif self.n_girls > self.n_boys:</code></span>
+                <span><code>            container = [[] for _ in range(self.n_girls)]</code></span>
+                <span><code>            for index, boy in enumerate(self.boys):</code></span>
+                <span><code>                container[boy[0]].append(boy + [index, 0])</code></span>
+                <span><code>            while True:</code></span>
+                <span><code>                for index, cont in enumerate(container):</code></span>
+                <span><code>                    if len(cont) == 0:</code></span>
+                <span><code>                        continue</code></span>
+                <span><code>                    if len(cont) > 1:</code></span>
+                <span><code>                        boys_arr = [c[-2] for c in cont]</code></span>
+                <span><code>                        boyChooseId = self.findBest(boys_arr, self.girls[index])</code></span>
+                <span><code>                        for c in cont:</code></span>
+                <span><code>                            if c[-2] != boyChooseId:</code></span>
+                <span><code>                                c[-1] += 1</code></span>
+                <span><code>                                container[c[c[-1]]].append(c)</code></span>
+                <span><code>                            else:</code></span>
+                <span><code>                                boyChoose = c.copy()</code></span>
+                <span><code>                        container[index] = [boyChoose.copy()]</code></span>
+                <span><code>                        break</code></span>
+                <span><code>                else:</code></span>
+                <span><code>                    break</code></span>
+                <span><code>            self.boys = [cont[0][:-2] if cont else [] for cont in container]</code></span>
+                <span><code>            ans = {}</code></span>
+                <span><code>            for value, cont in enumerate(container):</code></span>
+                <span><code>                if cont:</code></span>
+                <span><code>                    ans[value] = cont[0][-2]</code></span>
+                <span><code>                else:</code></span>
+                <span><code>                    ans[value] = None</code></span>
+                <span><code>            ans['girls'] = 'boys'</code></span>
+                <span><code>            return ans</code></span>
+                <span><code>        else:</code></span>
+                <span><code>            container = [[] for _ in range(self.n_boys)]</code></span>
+                <span><code>            for index, girl in enumerate(self.girls):</code></span>
+                <span><code>                container[girl[0]].append(girl + [index, 0])</code></span>
+                <span><code>            while True:</code></span>
+                <span><code>                for index, cont in enumerate(container):</code></span>
+                <span><code>                    if len(cont) == 0:</code></span>
+                <span><code>                        continue</code></span>
+                <span><code>                    if len(cont) > 1:</code></span>
+                <span><code>                        girls_arr = [c[-2] for c in cont]</code></span>
+                <span><code>                        girlChooseId = self.findBest(girls_arr, self.boys[index])</code></span>
+                <span><code>                        for c in cont:</code></span>
+                <span><code>                            if c[-2] != girlChooseId:</code></span>
+                <span><code>                                c[-1] += 1</code></span>
+                <span><code>                                container[c[c[-1]]].append(c)</code></span>
+                <span><code>                            else:</code></span>
+                <span><code>                                girlChoose = c.copy()</code></span>
+                <span><code>                        container[index] = [girlChoose.copy()]</code></span>
+                <span><code>                        break</code></span>
+                <span><code>                else:</code></span>
+                <span><code>                    break</code></span>
+                <span><code>            self.girls = [cont[0][:-2] if cont else [] for cont in container]</code></span>
+                <span><code>            ans = {}</code></span>
+                <span><code>            for value, cont in enumerate(container):</code></span>
+                <span><code>                if cont:</code></span>
+                <span><code>                    ans[value] = cont[0][-2]</code></span>
+                <span><code>                else:</code></span>
+                <span><code>                    ans[value] = None</code></span>
+                <span><code>            ans['boys'] = 'girls'</code></span>
+                <span><code>            return ans</code></span>
+            </pre>
+            <div>生成每个男生（女生）对女生（男生）的喜欢程度排名</div>
+            <pre id="code_block">
+                <span><code>gs = GS()</code></span>
+                <span><code>gs.random(5, 5, 42)</code></span>
+                <span><code>print("boys:   " + str(gs.boys))</code></span>
+                <span><code>print('girls:  ' + str(gs.girls))</code></span>
+            </pre>
+            <img src="../static/Math/mathematicalModeling/47.png">
+            <div>求解</div>
+            <pre id="code_block">
+                <span><code>print(gs.run())</code></span>
+                <span><code>print("boys:   " + str(gs.boys))</code></span>
+                <span><code>print('girls:  ' + str(gs.girls))</code></span>
+            </pre>
+            <img src="../static/Math/mathematicalModeling/48.png">
+            <div>也可以解决男女人数不相等的情况</div>
+            <pre id="code_block">
+                <span><code>gs = GS()</code></span>
+                <span><code>gs.random(5, 6, 42)</code></span>
+                <span><code>print(gs.run())</code></span>
+            </pre>
+            <img src="../static/Math/mathematicalModeling/49.png">
+        </li>
+    </ol>
 </body>
 </html>
