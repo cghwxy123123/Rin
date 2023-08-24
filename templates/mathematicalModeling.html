@@ -1440,5 +1440,115 @@
             <img src="../static/Math/mathematicalModeling/49.png">
         </li>
     </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">灰色关联分析</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>作用：</div>
+            <div>灰色关联度分析对于一个系统发展变化态势提供了量化的度量，非常适合动态历程分析。</div>
+        </li>
+        <li>
+            <div>步骤：</div>
+            <ol type="i">
+                <li><div>确定分析数列</div></li>
+                <li>
+                    <div>变量的无量纲化</div>
+                    <div>1、标准化</div>
+                    <div>2、归一化</div>
+                </li>
+                <li>
+                    <div>计算关联系数</div>
+                </li>
+            </ol>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>获取数据集</div>
+            <pre id="code_block">
+                <span><code>import pandas as pd</code></span>
+                <span><code>import numpy as np</code></span>
+                <span><code>from sklearn.datasets import load_wine</code></span>
+                <span><code></code></span>
+                <span><code>data = load_wine().data</code></span>
+                <span><code>feature = load_wine().feature_names</code></span>
+                <span><code>wine = pd.DataFrame({feature[i]: data[:,i] for i in range((len(feature)))})</code></span>
+            </pre>
+            <div>求灰色关联度矩阵</div>
+            <pre id="code_block">
+                <span><code>def dimensionlessProcessing(df_values, df_columns):</code></span>
+                <span><code>    from sklearn.preprocessing import StandardScaler</code></span>
+                <span><code>    scaler = StandardScaler()</code></span>
+                <span><code>    res = scaler.fit_transform(df_values)</code></span>
+                <span><code>    return pd.DataFrame(res, columns=df_columns)</code></span>
+                <span><code></code></span>
+                <span><code></code></span>
+                <span><code># 求第一列(影响因素)和其它所有列(影响因素)的灰色关联值</code></span>
+                <span><code>def GRA_ONE(data, m=0):  # m为参考列</code></span>
+                <span><code>    # 标准化</code></span>
+                <span><code>    data = dimensionlessProcessing(data.values, data.columns)</code></span>
+                <span><code>    # 参考数列</code></span>
+                <span><code>    std = data.iloc[:, m]</code></span>
+                <span><code>    # 比较数列</code></span>
+                <span><code>    ce = data.copy()</code></span>
+                <span><code></code></span>
+                <span><code>    n = ce.shape[0]</code></span>
+                <span><code>    m = ce.shape[1]</code></span>
+                <span><code></code></span>
+                <span><code>    # 与参考数列比较，相减</code></span>
+                <span><code>    grap = np.zeros([n, m])</code></span>
+                <span><code>    for i in range(m):</code></span>
+                <span><code>        for j in range(n):</code></span>
+                <span><code>            grap[j, i] = abs(ce.iloc[j, i] - std[j])</code></span>
+                <span><code></code></span>
+                <span><code>    # 取出矩阵中的最大值和最小值</code></span>
+                <span><code>    mmax = np.amax(grap)</code></span>
+                <span><code>    mmin = np.amin(grap)</code></span>
+                <span><code>    ρ = 0.5  # 灰色分辨系数</code></span>
+                <span><code></code></span>
+                <span><code>    # 计算值</code></span>
+                <span><code>    grap = pd.DataFrame(grap).applymap(lambda x: (mmin + ρ * mmax) / (x + ρ * mmax))</code></span>
+                <span><code></code></span>
+                <span><code>    # 求均值，得到灰色关联值</code></span>
+                <span><code>    RT = grap.mean(axis=0)</code></span>
+                <span><code>    return pd.Series(RT)</code></span>
+                <span><code></code></span>
+                <span><code></code></span>
+                <span><code># 调用GRA_ONE，求得所有因素之间的灰色关联值</code></span>
+                <span><code>def GRA(data):</code></span>
+                <span><code>    list_columns = np.arange(data.shape[1])</code></span>
+                <span><code>    df_local = pd.DataFrame(columns=list_columns)</code></span>
+                <span><code>    for i in np.arange(data.shape[1]):</code></span>
+                <span><code>        df_local[df_local.columns[i]] = GRA_ONE(data, m=i)</code></span>
+                <span><code>    return df_local</code></span>
+                <span><code></code></span>
+                <span><code></code></span>
+                <span><code>pd.set_option('display.max_columns', None)</code></span>
+                <span><code>data_gra = GRA(wine)</code></span>
+                <span><code>print(data_gra)</code></span>
+            </pre>
+            <img src="../static/Math/mathematicalModeling/50.png" height="400px">
+            <img src="../static/Math/mathematicalModeling/51.png" height="400px">
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>import seaborn as sns  # 可视化图形调用库</code></span>
+                <span><code>import matplotlib.pyplot as plt</code></span>
+                <span><code></code></span>
+                <span><code></code></span>
+                <span><code>def ShowGRAHeatMap(data):</code></span>
+                <span><code>    # 色彩集</code></span>
+                <span><code>    colormap = plt.cm.RdBu</code></span>
+                <span><code>    plt.figure(figsize=(18, 16))</code></span>
+                <span><code>    plt.title('Person Correlation of Features', y=1.05, size=18)</code></span>
+                <span><code>    sns.heatmap(data.astype(float), linewidths=0.1, vmax=1.0, square=True, \</code></span>
+                <span><code>                cmap=colormap, linecolor='white', annot=True)</code></span>
+                <span><code>    plt.show()</code></span>
+                <span><code></code></span>
+                <span><code></code></span>
+                <span><code>ShowGRAHeatMap(data_gra)</code></span>
+            </pre>
+            <img src="../static/Math/mathematicalModeling/52.png">
+        </li>
+    </ol>
 </body>
 </html>
