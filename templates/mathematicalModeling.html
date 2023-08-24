@@ -703,5 +703,570 @@
             <img src="../static/Math/mathematicalModeling/25.png">
         </li>
     </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">粒子群算法</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <div>将鸟群觅食行为和算法原理对应，如下图：</div>
+            <img src="../static/Math/mathematicalModeling/26.png">
+            <ol type="i">
+                <li><div>PSO的基础：信息的社会共享</div></li>
+                <li>
+                    <div>粒子的两个属性：速度和位置（算法的两个核心要素）</div>
+                    <div>速度表示粒子下一步迭代时移动的方向和距离，位置是所求解问题的一个解。</div>
+                </li>
+                <li>
+                    <div>算法的6个重要参数</div>
+                    <div>假设在D维搜索空间有N个粒子，每个粒子代表一个解，则：</div>
+                    <img src="../static/Math/mathematicalModeling/27.png">
+                </li>
+                <li>
+                    <div>速度更新公式</div>
+                    <div>表述上叫速度，实际上就是粒子下一步迭代移动的距离和方向，也就是一个位置向量。</div>
+                    <img src="../static/Math/mathematicalModeling/28.png">
+                    <ol type="A">
+                        <li>
+                            <div>速度更新公式的解释</div>
+                            <ol type="a">
+                                <li>
+                                    <div>第一项：惯性部分</div>
+                                    <div>由惯性权重和粒子自身速度构成，表示粒子对先前自身运动状态的信任。</div>
+                                </li>
+                                <li>
+                                    <div>第二项：认知部分</div>
+                                    <div>表示粒子本身的思考，即粒子自己经验的部分，可理解为粒子当前位置与自身历史最优位置之间的距离和方向。</div>
+                                </li>
+                                <li>
+                                    <div>第三项：社会部分</div>
+                                    <div>表示粒子之间的信息共享与合作，即来源于群体中其他优秀粒子的经验，可理解为粒子当前位置与群体历史最优位置之间的距离和方向。</div>
+                                </li>
+                            </ol>
+                        </li>
+                        <li>
+                            <div>速度更新公式的参数定义</div>
+                            <img src="../static/Math/mathematicalModeling/29.png">
+                        </li>
+                        <li>
+                            <div>速度的方向</div>
+                            <div>粒子下一步迭代的移动方向 = 惯性方向 + 个体最优方向 + 群体最优方向</div>
+                            <img src="../static/Math/mathematicalModeling/30.png">
+                        </li>
+                    </ol>
+                </li>
+                <li>
+                    <div>位置更新公式</div>
+                    <div>上一步的位置 + 下一步的速度</div>
+                    <img src="../static/Math/mathematicalModeling/31.png">
+                </li>
+                <li>
+                    <div>算法参数的详细解释</div>
+                    <div><img src="../static/Math/mathematicalModeling/32.png"></div>
+                    <div><img src="../static/Math/mathematicalModeling/33.png"></div>
+                    <div><img src="../static/Math/mathematicalModeling/34.png"></div>
+                </li>
+            </ol>
+        </li>
+        <li>
+            <div>流程分析</div>
+            <img src="../static/Math/mathematicalModeling/35.png">
+        </li>
+        <li>
+            <div>带约束的粒子群算法</div>
+            <div>定义函数</div>
+            <pre id="code_block">
+                <span><code>def demo_func(x):</code></span>
+                <span><code>    x1, x2, x3 = x</code></span>
+                <span><code>    return x1 ** 2 + (x2 - 0.05) ** 2 + x3 ** 2</code></span>
+            </pre>
+            <div>求解</div>
+            <pre id="code_block">
+                <span><code>from sko.PSO import PSO</code></span>
+                <span><code></code></span>
+                <span><code>pso = PSO(func=demo_func, dim=3, pop=40, max_iter=150, lb=[0, -1, 0.5], ub=[1, 1, 1], w=0.8, c1=0.5, c2=0.5)</code></span>
+                <span><code>pso.run()</code></span>
+                <span><code>print('best_x is ', pso.gbest_x, 'best_y is', pso.gbest_y)</code></span>
+            </pre>
+            <div>结果如下</div>
+            <img src="../static/Math/mathematicalModeling/36.png">
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>import matplotlib.pyplot as plt</code></span>
+                <span><code></code></span>
+                <span><code>plt.plot(pso.gbest_y_hist)</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <img src="../static/Math/mathematicalModeling/37.png">
+        </li>
+        <li>
+            <div>不带约束的粒子群算法</div>
+            <div>求解</div>
+            <pre id="code_block">
+                <span><code>from sko.PSO import PSO</code></span>
+                <span><code></code></span>
+                <span><code>pso = PSO(func=demo_func, dim=3)</code></span>
+                <span><code>fitness = pso.run()</code></span>
+                <span><code>print('best_x is ', pso.gbest_x, 'best_y is', pso.gbest_y)</code></span>
+            </pre>
+            <img src="../static/Math/mathematicalModeling/38.png">
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>import matplotlib.pyplot as plt</code></span>
+                <span><code></code></span>
+                <span><code>plt.plot(pso.gbest_y_hist)</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <img src="../static/Math/mathematicalModeling/39.png">
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">蚁群算法</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <div>假如蚁群中所有蚂蚁的数量为m，所有城市之间的信息素用矩阵pheromone表示，最短路径为bestLength，最佳路径为bestTour。每只蚂蚁都有自己的内存，内存中用一个禁忌表（Tabu）来存储该蚂蚁已经访问过的城市，表示其在以后的搜索中将不能访问这些城市；还有用另外一个允许访问的城市表（Allowed）来存储它还可以访问的城市；另外还用一个矩阵（Delta）来存储它在一个循环（或者迭代）中给所经过的路径释放的信息素；还有另外一些数据，例如一些控制参数(α，β，ρ，Q)，该蚂蚁行走玩全程的总成本或距离（tourLength），等等。假定算法总共运行MAX_GEN次，运行时间为t。</div>
+        </li>
+        <li>
+            <div>流程分析</div>
+            <ol type="i">
+                <li><div>初始化。</div></li>
+                <li><div>为每只蚂蚁选择下一个节点。</div></li>
+                <li><div>更新信息素矩阵。</div></li>
+                <li><div>检查终止条件</div></li>
+                <div>如果达到最大代数MAX_GEN，算法终止，转到第（5）步；否则，重新初始化所有的蚂蚁的Delt矩阵所有元素初始化为0，Tabu表清空，Allowed表中加入所有的城市节点。随机选择它们的起始位置（也可以人工指定）。在Tabu中加入起始节点，Allowed中去掉该起始节点，重复执行（2），（3）,(4)步。</div>
+                <li><div>输出最优值</div></li>
+            </ol>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <pre id="code_block">
+                <span><code>import random</code></span>
+                <span><code>import copy</code></span>
+                <span><code>import sys</code></span>
+                <span><code>import tkinter  # //GUI模块</code></span>
+                <span><code>import threading</code></span>
+                <span><code>from functools import reduce</code></span>
+                <span><code></code></span>
+                <span><code># 参数</code></span>
+                <span><code>"""</code></span>
+                <span><code>ALPHA:信息启发因子，值越大，则蚂蚁选择之前走过的路径可能性就越大</code></span>
+                <span><code>      ，值越小，则蚁群搜索范围就会减少，容易陷入局部最优</code></span>
+                <span><code>BETA:Beta值越大，蚁群越就容易选择局部较短路径，这时算法收敛速度会</code></span>
+                <span><code>     加快，但是随机性不高，容易得到局部的相对最优</code></span>
+                <span><code>"""</code></span>
+                <span><code>(ALPHA, BETA, RHO, Q) = (1.0, 2.0, 0.5, 100.0)</code></span>
+                <span><code># 城市数，蚁群</code></span>
+                <span><code>(city_num, ant_num) = (50, 50)</code></span>
+                <span><code>distance_x = [</code></span>
+                <span><code>    178, 272, 176, 171, 650, 499, 267, 703, 408, 437, 491, 74, 532,</code></span>
+                <span><code>    416, 626, 42, 271, 359, 163, 508, 229, 576, 147, 560, 35, 714,</code></span>
+                <span><code>    757, 517, 64, 314, 675, 690, 391, 628, 87, 240, 705, 699, 258,</code></span>
+                <span><code>    428, 614, 36, 360, 482, 666, 597, 209, 201, 492, 294]</code></span>
+                <span><code>distance_y = [</code></span>
+                <span><code>    170, 395, 198, 151, 242, 556, 57, 401, 305, 421, 267, 105, 525,</code></span>
+                <span><code>    381, 244, 330, 395, 169, 141, 380, 153, 442, 528, 329, 232, 48,</code></span>
+                <span><code>    498, 265, 343, 120, 165, 50, 433, 63, 491, 275, 348, 222, 288,</code></span>
+                <span><code>    490, 213, 524, 244, 114, 104, 552, 70, 425, 227, 331]</code></span>
+                <span><code># 城市距离和信息素</code></span>
+                <span><code>distance_graph = [[0.0 for col in range(city_num)] for raw in range(city_num)]</code></span>
+                <span><code>pheromone_graph = [[1.0 for col in range(city_num)] for raw in range(city_num)]</code></span>
+                <span><code></code></span>
+                <span><code>class Ant(object):</code></span>
+                <span><code></code></span>
+                <span><code>    # 初始化</code></span>
+                <span><code>    def __init__(self, ID):</code></span>
+                <span><code></code></span>
+                <span><code>        self.ID = ID  # ID</code></span>
+                <span><code>        self.__clean_data()  # 随机初始化出生点</code></span>
+                <span><code></code></span>
+                <span><code>    # 初始数据</code></span>
+                <span><code>    def __clean_data(self):</code></span>
+                <span><code></code></span>
+                <span><code>        self.path = []  # 当前蚂蚁的路径</code></span>
+                <span><code>        self.total_distance = 0.0  # 当前路径的总距离</code></span>
+                <span><code>        self.move_count = 0  # 移动次数</code></span>
+                <span><code>        self.current_city = -1  # 当前停留的城市</code></span>
+                <span><code>        self.open_table_city = [True for i in range(city_num)]  # 探索城市的状态</code></span>
+                <span><code></code></span>
+                <span><code>        city_index = random.randint(0, city_num - 1)  # 随机初始出生点</code></span>
+                <span><code>        self.current_city = city_index</code></span>
+                <span><code>        self.path.append(city_index)</code></span>
+                <span><code>        self.open_table_city[city_index] = False</code></span>
+                <span><code>        self.move_count = 1</code></span>
+                <span><code></code></span>
+                <span><code>    # 选择下一个城市</code></span>
+                <span><code>    def __choice_next_city(self):</code></span>
+                <span><code></code></span>
+                <span><code>        next_city = -1</code></span>
+                <span><code>        select_citys_prob = [0.0 for i in range(city_num)]  # 存储去下个城市的概率</code></span>
+                <span><code>        total_prob = 0.0</code></span>
+                <span><code></code></span>
+                <span><code>        # 获取去下一个城市的概率</code></span>
+                <span><code>        for i in range(city_num):</code></span>
+                <span><code>            if self.open_table_city[i]:</code></span>
+                <span><code>                try:</code></span>
+                <span><code>                    # 计算概率：与信息素浓度成正比，与距离成反比</code></span>
+                <span><code>                    select_citys_prob[i] = pow(pheromone_graph[self.current_city][i], ALPHA) * pow(</code></span>
+                <span><code>                        (1.0 / distance_graph[self.current_city][i]), BETA)</code></span>
+                <span><code>                    total_prob += select_citys_prob[i]</code></span>
+                <span><code>                except ZeroDivisionError as e:</code></span>
+                <span><code>                    print('Ant ID: {ID}, current city: {current}, target city: {target}'.format(ID=self.ID,</code></span>
+                <span><code>                                                                                                current=self.current_city,</code></span>
+                <span><code>                                                                                                target=i))</code></span>
+                <span><code>                    sys.exit(1)</code></span>
+                <span><code></code></span>
+                <span><code>        # 轮盘选择城市</code></span>
+                <span><code>        if total_prob > 0.0:</code></span>
+                <span><code>            # 产生一个随机概率,0.0-total_prob</code></span>
+                <span><code>            temp_prob = random.uniform(0.0, total_prob)</code></span>
+                <span><code>            for i in range(city_num):</code></span>
+                <span><code>                if self.open_table_city[i]:</code></span>
+                <span><code>                    # 轮次相减</code></span>
+                <span><code>                    temp_prob -= select_citys_prob[i]</code></span>
+                <span><code>                    if temp_prob < 0.0:</code></span>
+                <span><code>                        next_city = i</code></span>
+                <span><code>                        break</code></span>
+                <span><code></code></span>
+                <span><code>        # 未从概率产生，顺序选择一个未访问城市</code></span>
+                <span><code>        # if next_city == -1:</code></span>
+                <span><code>        #     for i in range(city_num):</code></span>
+                <span><code>        #         if self.open_table_city[i]:</code></span>
+                <span><code>        #             next_city = i</code></span>
+                <span><code>        #             break</code></span>
+                <span><code></code></span>
+                <span><code>        if (next_city == -1):</code></span>
+                <span><code>            next_city = random.randint(0, city_num - 1)</code></span>
+                <span><code>            while ((self.open_table_city[next_city]) == False):  # if==False,说明已经遍历过了</code></span>
+                <span><code>                next_city = random.randint(0, city_num - 1)</code></span>
+                <span><code></code></span>
+                <span><code>        # 返回下一个城市序号</code></span>
+                <span><code>        return next_city</code></span>
+                <span><code></code></span>
+                <span><code>    # 计算路径总距离</code></span>
+                <span><code>    def __cal_total_distance(self):</code></span>
+                <span><code></code></span>
+                <span><code>        temp_distance = 0.0</code></span>
+                <span><code></code></span>
+                <span><code>        for i in range(1, city_num):</code></span>
+                <span><code>            start, end = self.path[i], self.path[i - 1]</code></span>
+                <span><code>            temp_distance += distance_graph[start][end]</code></span>
+                <span><code></code></span>
+                <span><code>        # 回路</code></span>
+                <span><code>        end = self.path[0]</code></span>
+                <span><code>        temp_distance += distance_graph[start][end]</code></span>
+                <span><code>        self.total_distance = temp_distance</code></span>
+                <span><code></code></span>
+                <span><code>    # 移动操作</code></span>
+                <span><code>    def __move(self, next_city):</code></span>
+                <span><code></code></span>
+                <span><code>        self.path.append(next_city)</code></span>
+                <span><code>        self.open_table_city[next_city] = False</code></span>
+                <span><code>        self.total_distance += distance_graph[self.current_city][next_city]</code></span>
+                <span><code>        self.current_city = next_city</code></span>
+                <span><code>        self.move_count += 1</code></span>
+                <span><code></code></span>
+                <span><code>    # 搜索路径</code></span>
+                <span><code>    def search_path(self):</code></span>
+                <span><code></code></span>
+                <span><code>        # 初始化数据</code></span>
+                <span><code>        self.__clean_data()</code></span>
+                <span><code></code></span>
+                <span><code>        # 搜素路径，遍历完所有城市为止</code></span>
+                <span><code>        while self.move_count < city_num:</code></span>
+                <span><code>            # 移动到下一个城市</code></span>
+                <span><code>            next_city = self.__choice_next_city()</code></span>
+                <span><code>            self.__move(next_city)</code></span>
+                <span><code></code></span>
+                <span><code>        # 计算路径总长度</code></span>
+                <span><code>        self.__cal_total_distance()</code></span>
+                <span><code></code></span>
+                <span><code>class TSP(object):</code></span>
+                <span><code></code></span>
+                <span><code>    def __init__(self, root, width=800, height=600, n=city_num):</code></span>
+                <span><code></code></span>
+                <span><code>        # 创建画布</code></span>
+                <span><code>        self.root = root</code></span>
+                <span><code>        self.width = width</code></span>
+                <span><code>        self.height = height</code></span>
+                <span><code>        # 城市数目初始化为city_num</code></span>
+                <span><code>        self.n = n</code></span>
+                <span><code>        # tkinter.Canvas</code></span>
+                <span><code>        self.canvas = tkinter.Canvas(</code></span>
+                <span><code>            root,</code></span>
+                <span><code>            width=self.width,</code></span>
+                <span><code>            height=self.height,</code></span>
+                <span><code>            bg="#EBEBEB",  # 背景白色</code></span>
+                <span><code>            xscrollincrement=1,</code></span>
+                <span><code>            yscrollincrement=1</code></span>
+                <span><code>        )</code></span>
+                <span><code>        self.canvas.pack(expand=tkinter.YES, fill=tkinter.BOTH)</code></span>
+                <span><code>        self.title("TSP蚁群算法(n:初始化 e:开始搜索 s:停止搜索 q:退出程序)")</code></span>
+                <span><code>        self.__r = 5</code></span>
+                <span><code>        self.__lock = threading.RLock()  # 线程锁</code></span>
+                <span><code></code></span>
+                <span><code>        self.__bindEvents()</code></span>
+                <span><code>        self.new()</code></span>
+                <span><code></code></span>
+                <span><code>        # 计算城市之间的距离</code></span>
+                <span><code>        for i in range(city_num):</code></span>
+                <span><code>            for j in range(city_num):</code></span>
+                <span><code>                temp_distance = pow((distance_x[i] - distance_x[j]), 2) + pow((distance_y[i] - distance_y[j]), 2)</code></span>
+                <span><code>                temp_distance = pow(temp_distance, 0.5)</code></span>
+                <span><code>                distance_graph[i][j] = float(int(temp_distance + 0.5))</code></span>
+                <span><code></code></span>
+                <span><code>    # 按键响应程序</code></span>
+                <span><code>    def __bindEvents(self):</code></span>
+                <span><code></code></span>
+                <span><code>        self.root.bind("q", self.quite)  # 退出程序</code></span>
+                <span><code>        self.root.bind("n", self.new)  # 初始化</code></span>
+                <span><code>        self.root.bind("e", self.search_path)  # 开始搜索</code></span>
+                <span><code>        self.root.bind("s", self.stop)  # 停止搜索</code></span>
+                <span><code></code></span>
+                <span><code>    # 更改标题</code></span>
+                <span><code>    def title(self, s):</code></span>
+                <span><code></code></span>
+                <span><code>        self.root.title(s)</code></span>
+                <span><code></code></span>
+                <span><code>    # 初始化</code></span>
+                <span><code>    def new(self, evt=None):</code></span>
+                <span><code></code></span>
+                <span><code>        # 停止线程</code></span>
+                <span><code>        self.__lock.acquire()</code></span>
+                <span><code>        self.__running = False</code></span>
+                <span><code>        self.__lock.release()</code></span>
+                <span><code></code></span>
+                <span><code>        self.clear()  # 清除信息</code></span>
+                <span><code>        self.nodes = []  # 节点坐标</code></span>
+                <span><code>        self.nodes2 = []  # 节点对象</code></span>
+                <span><code></code></span>
+                <span><code>        # 初始化城市节点</code></span>
+                <span><code>        for i in range(len(distance_x)):</code></span>
+                <span><code>            # 在画布上随机初始坐标</code></span>
+                <span><code>            x = distance_x[i]</code></span>
+                <span><code>            y = distance_y[i]</code></span>
+                <span><code>            self.nodes.append((x, y))</code></span>
+                <span><code>            # 生成节点椭圆，半径为self.__r</code></span>
+                <span><code>            node = self.canvas.create_oval(x - self.__r,</code></span>
+                <span><code>                                           y - self.__r, x + self.__r, y + self.__r,</code></span>
+                <span><code>                                           fill="#ff0000",  # 填充红色</code></span>
+                <span><code>                                           outline="#000000",  # 轮廓白色</code></span>
+                <span><code>                                           tags="node",</code></span>
+                <span><code>                                           )</code></span>
+                <span><code>            self.nodes2.append(node)</code></span>
+                <span><code>            # 显示坐标</code></span>
+                <span><code>            self.canvas.create_text(x, y - 10,  # 使用create_text方法在坐标（302，77）处绘制文字</code></span>
+                <span><code>                                    text='(' + str(x) + ',' + str(y) + ')',  # 所绘制文字的内容</code></span>
+                <span><code>                                    fill='black'  # 所绘制文字的颜色为灰色</code></span>
+                <span><code>                                    )</code></span>
+                <span><code></code></span>
+                <span><code>        # 顺序连接城市</code></span>
+                <span><code>        # self.line(range(city_num))</code></span>
+                <span><code></code></span>
+                <span><code>        # 初始城市之间的距离和信息素</code></span>
+                <span><code>        for i in range(city_num):</code></span>
+                <span><code>            for j in range(city_num):</code></span>
+                <span><code>                pheromone_graph[i][j] = 1.0</code></span>
+                <span><code></code></span>
+                <span><code>        self.ants = [Ant(ID) for ID in range(ant_num)]  # 初始蚁群</code></span>
+                <span><code>        self.best_ant = Ant(-1)  # 初始最优解</code></span>
+                <span><code>        self.best_ant.total_distance = 1 << 31  # 初始最大距离</code></span>
+                <span><code>        self.iter = 1  # 初始化迭代次数</code></span>
+                <span><code></code></span>
+                <span><code>    # 将节点按order顺序连线</code></span>
+                <span><code>    def line(self, order):</code></span>
+                <span><code>        # 删除原线</code></span>
+                <span><code>        self.canvas.delete("line")</code></span>
+                <span><code></code></span>
+                <span><code>        def line2(i1, i2):</code></span>
+                <span><code>            p1, p2 = self.nodes[i1], self.nodes[i2]</code></span>
+                <span><code>            self.canvas.create_line(p1, p2, fill="#000000", tags="line")</code></span>
+                <span><code>            return i2</code></span>
+                <span><code></code></span>
+                <span><code>        # order[-1]为初始值</code></span>
+                <span><code>        reduce(line2, order, order[-1])</code></span>
+                <span><code></code></span>
+                <span><code>    # 清除画布</code></span>
+                <span><code>    def clear(self):</code></span>
+                <span><code>        for item in self.canvas.find_all():</code></span>
+                <span><code>            self.canvas.delete(item)</code></span>
+                <span><code></code></span>
+                <span><code>    # 退出程序</code></span>
+                <span><code>    def quite(self, evt):</code></span>
+                <span><code>        self.__lock.acquire()</code></span>
+                <span><code>        self.__running = False</code></span>
+                <span><code>        self.__lock.release()</code></span>
+                <span><code>        self.root.destroy()</code></span>
+                <span><code>        print(u"\n程序已退出...")</code></span>
+                <span><code>        sys.exit()</code></span>
+                <span><code></code></span>
+                <span><code>    # 停止搜索</code></span>
+                <span><code>    def stop(self, evt):</code></span>
+                <span><code>        self.__lock.acquire()</code></span>
+                <span><code>        self.__running = False</code></span>
+                <span><code>        self.__lock.release()</code></span>
+                <span><code></code></span>
+                <span><code>    # 开始搜索</code></span>
+                <span><code>    def search_path(self, evt=None):</code></span>
+                <span><code></code></span>
+                <span><code>        # 开启线程</code></span>
+                <span><code>        self.__lock.acquire()</code></span>
+                <span><code>        self.__running = True</code></span>
+                <span><code>        self.__lock.release()</code></span>
+                <span><code></code></span>
+                <span><code>        while self.__running:</code></span>
+                <span><code>            # 遍历每一只蚂蚁</code></span>
+                <span><code>            for ant in self.ants:</code></span>
+                <span><code>                # 搜索一条路径</code></span>
+                <span><code>                ant.search_path()</code></span>
+                <span><code>                # 与当前最优蚂蚁比较</code></span>
+                <span><code>                if ant.total_distance < self.best_ant.total_distance:</code></span>
+                <span><code>                    # 更新最优解</code></span>
+                <span><code>                    self.best_ant = copy.deepcopy(ant)</code></span>
+                <span><code>            # 更新信息素</code></span>
+                <span><code>            self.__update_pheromone_gragh()</code></span>
+                <span><code>            print(u"迭代次数：", self.iter, u"最佳路径总距离：", int(self.best_ant.total_distance))</code></span>
+                <span><code>            # 连线</code></span>
+                <span><code>            self.line(self.best_ant.path)</code></span>
+                <span><code>            # 设置标题</code></span>
+                <span><code>            self.title("TSP蚁群算法(n:随机初始 e:开始搜索 s:停止搜索 q:退出程序) 迭代次数: %d" % self.iter)</code></span>
+                <span><code>            # 更新画布</code></span>
+                <span><code>            self.canvas.update()</code></span>
+                <span><code>            self.iter += 1</code></span>
+                <span><code></code></span>
+                <span><code>    # 更新信息素</code></span>
+                <span><code>    def __update_pheromone_gragh(self):</code></span>
+                <span><code></code></span>
+                <span><code>        # 获取每只蚂蚁在其路径上留下的信息素</code></span>
+                <span><code>        temp_pheromone = [[0.0 for col in range(city_num)] for raw in range(city_num)]</code></span>
+                <span><code>        for ant in self.ants:</code></span>
+                <span><code>            for i in range(1, city_num):</code></span>
+                <span><code>                start, end = ant.path[i - 1], ant.path[i]</code></span>
+                <span><code>                # 在路径上的每两个相邻城市间留下信息素，与路径总距离反比</code></span>
+                <span><code>                temp_pheromone[start][end] += Q / ant.total_distance</code></span>
+                <span><code>                temp_pheromone[end][start] = temp_pheromone[start][end]</code></span>
+                <span><code></code></span>
+                <span><code>        # 更新所有城市之间的信息素，旧信息素衰减加上新迭代信息素</code></span>
+                <span><code>        for i in range(city_num):</code></span>
+                <span><code>            for j in range(city_num):</code></span>
+                <span><code>                pheromone_graph[i][j] = pheromone_graph[i][j] * RHO + temp_pheromone[i][j]</code></span>
+                <span><code></code></span>
+                <span><code>    # 主循环</code></span>
+                <span><code>    def mainloop(self):</code></span>
+                <span><code>        self.root.mainloop()</code></span>
+                <span><code></code></span>
+                <span><code>if __name__ == '__main__':</code></span>
+                <span><code>    TSP(tkinter.Tk()).mainloop()</code></span>
+            </pre>
+        </li>
+        <li>
+            <div>旅行商问题</div>
+            <div>数据生成办法同退火算法</div>
+            <div>求解</div>
+            <pre id="code_block">
+                <span><code>from sko.ACA import ACA_TSP</code></span>
+                <span><code></code></span>
+                <span><code>aca = ACA_TSP(func=cal_total_distance, n_dim=num_points,</code></span>
+                <span><code>              size_pop=50, max_iter=1000,</code></span>
+                <span><code>              distance_matrix=distance_matrix)</code></span>
+                <span><code></code></span>
+                <span><code>best_points, best_distance = aca.run()</code></span>
+                <span><code>print(best_points, best_distance)</code></span>
+            </pre>
+            <img src="../static/Math/mathematicalModeling/40.png">
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>from matplotlib.ticker import FormatStrFormatter</code></span>
+                <span><code>fig, ax = plt.subplots(1, 2)</code></span>
+                <span><code>best_points_ = np.concatenate([best_points, [best_points[0]]])</code></span>
+                <span><code>best_points_coordinate = points_coordinate[best_points_, :]</code></span>
+                <span><code>ax[0].plot(aca.y_best_history)</code></span>
+                <span><code>ax[0].set_xlabel("Iteration")</code></span>
+                <span><code>ax[0].set_ylabel("Distance")</code></span>
+                <span><code>ax[1].plot(best_points_coordinate[:, 0], best_points_coordinate[:, 1],</code></span>
+                <span><code>           marker='o', markerfacecolor='b', color='c', linestyle='-')</code></span>
+                <span><code>ax[1].xaxis.set_major_formatter(FormatStrFormatter('%.3f'))</code></span>
+                <span><code>ax[1].yaxis.set_major_formatter(FormatStrFormatter('%.3f'))</code></span>
+                <span><code>ax[1].set_xlabel("Longitude")</code></span>
+                <span><code>ax[1].set_ylabel("Latitude")</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <img src="../static/Math/mathematicalModeling/41.png">
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">免疫优化算法</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>流程分析</div>
+            <img src="../static/Math/mathematicalModeling/42.png">
+        </li>
+        <li>
+            <div>旅行商问题</div>
+            <div>数据生成办法同退火算法</div>
+            <div>求解</div>
+            <pre id="code_block">
+                <span><code>from sko.IA import IA_TSP</code></span>
+                <span><code></code></span>
+                <span><code>ia_tsp = IA_TSP(func=cal_total_distance, n_dim=num_points, size_pop=500, max_iter=800, prob_mut=0.2,</code></span>
+                <span><code>                T=0.7, alpha=0.95)</code></span>
+                <span><code>best_points, best_distance = ia_tsp.run()</code></span>
+                <span><code>print('best routine:', best_points, 'best_distance:', best_distance)</code></span>
+            </pre>
+            <img src="../static/Math/mathematicalModeling/43.png">
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>from matplotlib.ticker import FormatStrFormatter</code></span>
+                <span><code>fig, ax = plt.subplots(1, 2)</code></span>
+                <span><code>best_points_ = np.concatenate([best_points, [best_points[0]]])</code></span>
+                <span><code>best_points_coordinate = points_coordinate[best_points_, :]</code></span>
+                <span><code>ax[0].plot(ia_tsp.all_history_Y)</code></span>
+                <span><code>ax[0].set_xlabel("Iteration")</code></span>
+                <span><code>ax[0].set_ylabel("Distance")</code></span>
+                <span><code>ax[1].plot(best_points_coordinate[:, 0], best_points_coordinate[:, 1],</code></span>
+                <span><code>           marker='o', markerfacecolor='b', color='c', linestyle='-')</code></span>
+                <span><code>ax[1].xaxis.set_major_formatter(FormatStrFormatter('%.3f'))</code></span>
+                <span><code>ax[1].yaxis.set_major_formatter(FormatStrFormatter('%.3f'))</code></span>
+                <span><code>ax[1].set_xlabel("Longitude")</code></span>
+                <span><code>ax[1].set_ylabel("Latitude")</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <img src="../static/Math/mathematicalModeling/44.png">
+        </li>
+
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">人工鱼群算法</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>流程分析</div>
+            <img src="../static/Math/mathematicalModeling/45.png">
+        </li>
+        <li>
+            <div>最小值问题</div>
+            <div>生成函数</div>
+            <pre id="code_block">
+                <span><code>def func(x):</code></span>
+                <span><code>    x1, x2 = x</code></span>
+                <span><code>    return 1 / x1 ** 2 + x1 ** 2 + 1 / x2 ** 2 + x2 ** 2</code></span>
+            </pre>
+            <div>求解</div>
+            <pre id="code_block">
+                <span><code>from sko.AFSA import AFSA</code></span>
+                <span><code></code></span>
+                <span><code>afsa = AFSA(func, n_dim=2, size_pop=50, max_iter=300,</code></span>
+                <span><code>            max_try_num=100, step=0.5, visual=0.3,</code></span>
+                <span><code>            q=0.98, delta=0.5)</code></span>
+                <span><code>best_x, best_y = afsa.run()</code></span>
+                <span><code>print(best_x, best_y)</code></span>
+            </pre>
+            <img src="../static/Math/mathematicalModeling/46.png">
+        </li>
+
+    </ol>
+
 </body>
 </html>
