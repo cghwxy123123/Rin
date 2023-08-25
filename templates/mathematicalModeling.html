@@ -1550,5 +1550,281 @@
             <img src="../static/Math/mathematicalModeling/52.png">
         </li>
     </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">斯皮尔曼(Spearman correlation)相关系数分析</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理分析</div>
+            <div>斯皮尔曼相关考察的是两者单调关系（monotonic relationship）的强度，通俗地说就是两者在变大或变小的趋势上多大程度上保持步调一致</div>
+            <img src="../static/Math/mathematicalModeling/53.png">
+            <div>p值检验</div>
+            <div>如果p值小于0.05的话，我们可以认为存在显著性的差异，即有明显的相关性</div>
+        </li>
+        <li>
+            <div>使用场景</div>
+            <ol type="i">
+                <li><div>数据展现的是非线性关系，或者不是正态分布的。</div></li>
+                <li><div>至少有一方数据是序数类型（ordinal）而非数值类型</div></li>
+                <li><div>数据中有明显的异常值</div></li>
+            </ol>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>导入数据</div>
+            <pre id="code_block">
+                <span><code>from sklearn.datasets import load_wine</code></span>
+                <span><code></code></span>
+                <span><code>data = load_wine().data</code></span>
+                <span><code>feature = load_wine().feature_names</code></span>
+                <span><code>wine = pd.DataFrame({feature[i]: data[:, i] for i in range((len(feature)))})</code></span>
+            </pre>
+            <div>计算斯皮尔曼系数矩阵</div>
+            <pre id="code_block">
+                <span><code>import pandas as pd</code></span>
+                <span><code>import scipy.stats as stats</code></span>
+                <span><code></code></span>
+                <span><code>def calculate_spearman_correlation(X, Y):</code></span>
+                <span><code>    return stats.spearmanr(X, Y)[0]</code></span>
+                <span><code></code></span>
+                <span><code>arr = []</code></span>
+                <span><code>for a in feature:</code></span>
+                <span><code>    arr2 = []</code></span>
+                <span><code>    for b in feature:</code></span>
+                <span><code>        spearman = calculate_spearman_correlation(wine[a], wine[b])</code></span>
+                <span><code>        arr2.append(spearman)</code></span>
+                <span><code>    arr.append(arr2)</code></span>
+                <span><code>data = pd.DataFrame(arr)</code></span>
+            </pre>
+            <img src="../static/Math/mathematicalModeling/54.png">
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>import seaborn as sns</code></span>
+                <span><code>import matplotlib.pyplot as plt</code></span>
+                <span><code></code></span>
+                <span><code>def ShowGRAHeatMap(data):</code></span>
+                <span><code>    # 色彩集</code></span>
+                <span><code>    colormap = plt.cm.RdBu</code></span>
+                <span><code>    plt.figure(figsize=(18, 16))</code></span>
+                <span><code>    plt.title('Person Correlation of Features', y=1.05, size=18)</code></span>
+                <span><code>    sns.heatmap(data.astype(float), linewidths=0.1, vmax=1.0, square=True, \</code></span>
+                <span><code>                cmap=colormap, linecolor='white', annot=True)</code></span>
+                <span><code>    plt.show()</code></span>
+                <span><code></code></span>
+                <span><code>ShowGRAHeatMap(data)</code></span>
+            </pre>
+            <img src="../static/Math/mathematicalModeling/55.png">
+            <div>计算p矩阵</div>
+            <pre id="code_block">
+                <span><code>def calculate_spearman_correlation_p(X, Y):</code></span>
+                <span><code>    return stats.spearmanr(X, Y)[1]</code></span>
+                <span><code></code></span>
+                <span><code>arr = []</code></span>
+                <span><code>for a in feature:</code></span>
+                <span><code>    arr2 = []</code></span>
+                <span><code>    for b in feature:</code></span>
+                <span><code>        spearman = calculate_spearman_correlation_p(wine[a], wine[b])</code></span>
+                <span><code>        arr2.append(spearman)</code></span>
+                <span><code>    arr.append(arr2)</code></span>
+                <span><code>data = pd.DataFrame(arr)</code></span>
+            </pre>
+            <img src="../static/Math/mathematicalModeling/56.png">
+            <img src="../static/Math/mathematicalModeling/57.png">
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">皮尔逊(Pearson correlation)相关系数分析</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理分析</div>
+            <div>皮尔逊相关系数衡量两个随机变量之间的线性关系（或者说线性关联度）</div>
+            <img src="../static/Math/mathematicalModeling/58.png">
+            <div>p值检验</div>
+            <div>如果p值小于0.05的话，我们可以认为存在显著性的差异，即有明显的相关性</div>
+        </li>
+        <li>
+            <div>使用场景</div>
+            <ol type="i">
+                <li><div>两个变量之间是线性关系，都是连续数据。</div></li>
+                <li><div>两个变量的总体是正态分布，或接近正态的单峰分布。</div></li>
+                <li><div>两个变量的观测值是成对的，每对观测值之间相互独立。</div></li>
+            </ol>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>导入数据</div>
+            <pre id="code_block">
+                <span><code>from sklearn.datasets import load_wine</code></span>
+                <span><code></code></span>
+                <span><code>data = load_wine().data</code></span>
+                <span><code>feature = load_wine().feature_names</code></span>
+                <span><code>wine = pd.DataFrame({feature[i]: data[:, i] for i in range((len(feature)))})</code></span>
+            </pre>
+            <div>计算皮尔逊系数矩阵</div>
+            <pre id="code_block">
+                <span><code>import pandas as pd</code></span>
+                <span><code>import scipy.stats as stats</code></span>
+                <span><code></code></span>
+                <span><code>def calculate_pearsonr_correlation(X, Y):</code></span>
+                <span><code>    return stats.pearsonr(X, Y)[0]</code></span>
+                <span><code></code></span>
+                <span><code>arr = []</code></span>
+                <span><code>for a in feature:</code></span>
+                <span><code>    arr2 = []</code></span>
+                <span><code>    for b in feature:</code></span>
+                <span><code>        pearsonr = calculate_pearsonr_correlation(wine[a], wine[b])</code></span>
+                <span><code>        arr2.append(pearsonr)</code></span>
+                <span><code>    arr.append(arr2)</code></span>
+                <span><code>data = pd.DataFrame(arr)</code></span>
+            </pre>
+            <img src="../static/Math/mathematicalModeling/59.png">
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>import seaborn as sns</code></span>
+                <span><code>import matplotlib.pyplot as plt</code></span>
+                <span><code></code></span>
+                <span><code>def ShowGRAHeatMap(data):</code></span>
+                <span><code>    # 色彩集</code></span>
+                <span><code>    colormap = plt.cm.RdBu</code></span>
+                <span><code>    plt.figure(figsize=(18, 16))</code></span>
+                <span><code>    plt.title('Person Correlation of Features', y=1.05, size=18)</code></span>
+                <span><code>    sns.heatmap(data.astype(float), linewidths=0.1, vmax=1.0, square=True, \</code></span>
+                <span><code>                cmap=colormap, linecolor='white', annot=True)</code></span>
+                <span><code>    plt.show()</code></span>
+                <span><code></code></span>
+                <span><code>ShowGRAHeatMap(data)</code></span>
+            </pre>
+            <img src="../static/Math/mathematicalModeling/60.png">
+            <div>计算p矩阵</div>
+            <pre id="code_block">
+                <span><code>def calculate_pearsonr_correlation_p(X, Y):</code></span>
+                <span><code>    return stats.pearsonr(X, Y)[1]</code></span>
+                <span><code></code></span>
+                <span><code>arr = []</code></span>
+                <span><code>for a in feature:</code></span>
+                <span><code>    arr2 = []</code></span>
+                <span><code>    for b in feature:</code></span>
+                <span><code>        pearsonr = calculate_pearsonr_correlation_p(wine[a], wine[b])</code></span>
+                <span><code>        arr2.append(pearsonr)</code></span>
+                <span><code>    arr.append(arr2)</code></span>
+                <span><code>data = pd.DataFrame(arr)</code></span>
+            </pre>
+            <img src="../static/Math/mathematicalModeling/61.png">
+            <img src="../static/Math/mathematicalModeling/62.png">
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">肯德尔(Kendall)相关系数分析</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理分析</div>
+            <div>肯德尔相关系数基于样本数据对之间的关系来进行相关系数的强弱的分析，数据对可以分为一致对(Concordant)和分歧对(Discordant)。</div>
+            <div>肯德尔系数有两个计算公式，一个称为Tau-c，另一个称为Tau-b。两者的区别是Tau-b可以处理有相同值的情况，即并列排位(tied ranks)。</div>
+            <div><img src="../static/Math/mathematicalModeling/63.png"></div>
+            <div><img src="../static/Math/mathematicalModeling/64.png"></div>
+            <div>p值检验</div>
+            <div>如果p值小于0.05的话，我们可以认为存在显著性的差异，即有明显的相关性</div>
+        </li>
+        <li>
+            <div>使用场景</div>
+            <div>当数据样本比较小，而且存在并列排位（tied ranks，比如说小明的历史成绩和英语成绩排名都是第8名）时，肯德尔相关系数是比斯皮尔曼相关系数更合适的一个相关性衡量指标。</div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>导入数据</div>
+            <pre id="code_block">
+                <span><code>from sklearn.datasets import load_wine</code></span>
+                <span><code></code></span>
+                <span><code>data = load_wine().data</code></span>
+                <span><code>feature = load_wine().feature_names</code></span>
+                <span><code>wine = pd.DataFrame({feature[i]: data[:, i] for i in range((len(feature)))})</code></span>
+            </pre>
+            <div>计算肯德尔c系数矩阵</div>
+            <pre id="code_block">
+                <span><code>import pandas as pd</code></span>
+                <span><code>import scipy.stats as stats</code></span>
+                <span><code></code></span>
+                <span><code>def calculate_kendalltau_correlation_c(X, Y):</code></span>
+                <span><code>    return stats.kendalltau(X, Y,variant='c')[0]</code></span>
+                <span><code></code></span>
+                <span><code>arr = []</code></span>
+                <span><code>for a in feature:</code></span>
+                <span><code>    arr2 = []</code></span>
+                <span><code>    for b in feature:</code></span>
+                <span><code>        kendalltau_c = calculate_kendalltau_correlation_c(wine[a], wine[b])</code></span>
+                <span><code>        arr2.append(kendalltau_c)</code></span>
+                <span><code>    arr.append(arr2)</code></span>
+                <span><code>data = pd.DataFrame(arr)</code></span>
+            </pre>
+            <img src="../static/Math/mathematicalModeling/65.png">
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>import seaborn as sns</code></span>
+                <span><code>import matplotlib.pyplot as plt</code></span>
+                <span><code></code></span>
+                <span><code>def ShowGRAHeatMap(data):</code></span>
+                <span><code>    # 色彩集</code></span>
+                <span><code>    colormap = plt.cm.RdBu</code></span>
+                <span><code>    plt.figure(figsize=(18, 16))</code></span>
+                <span><code>    plt.title('Person Correlation of Features', y=1.05, size=18)</code></span>
+                <span><code>    sns.heatmap(data.astype(float), linewidths=0.1, vmax=1.0, square=True, \</code></span>
+                <span><code>                cmap=colormap, linecolor='white', annot=True)</code></span>
+                <span><code>    plt.show()</code></span>
+                <span><code></code></span>
+                <span><code>ShowGRAHeatMap(data)</code></span>
+            </pre>
+            <img src="../static/Math/mathematicalModeling/66.png">
+            <div>计算p矩阵</div>
+            <pre id="code_block">
+                <span><code>def calculate_kendalltau_correlation_cp(X, Y):</code></span>
+                <span><code>    return stats.kendalltau(X, Y,variant='c')[1]</code></span>
+                <span><code></code></span>
+                <span><code>arr = []</code></span>
+                <span><code>for a in feature:</code></span>
+                <span><code>    arr2 = []</code></span>
+                <span><code>    for b in feature:</code></span>
+                <span><code>        kendalltau_cp = calculate_kendalltau_correlation_cp(wine[a], wine[b])</code></span>
+                <span><code>        arr2.append(kendalltau_cp)</code></span>
+                <span><code>    arr.append(arr2)</code></span>
+                <span><code>data = pd.DataFrame(arr)</code></span>
+            </pre>
+            <img src="../static/Math/mathematicalModeling/67.png">
+            <img src="../static/Math/mathematicalModeling/68.png">
+            <div>计算肯德尔b系数矩阵</div>
+            <pre id="code_block">
+                <span><code>def calculate_kendalltau_correlation_b(X, Y):</code></span>
+                <span><code>    return stats.kendalltau(X, Y,variant='b')[0]</code></span>
+                <span><code></code></span>
+                <span><code>arr = []</code></span>
+                <span><code>for a in feature:</code></span>
+                <span><code>    arr2 = []</code></span>
+                <span><code>    for b in feature:</code></span>
+                <span><code>        kendalltau_b = calculate_kendalltau_correlation_b(wine[a], wine[b])</code></span>
+                <span><code>        arr2.append(kendalltau_b)</code></span>
+                <span><code>    arr.append(arr2)</code></span>
+                <span><code>data = pd.DataFrame(arr)</code></span>
+            </pre>
+            <img src="../static/Math/mathematicalModeling/69.png">
+            <img src="../static/Math/mathematicalModeling/70.png">
+        </li>
+        <div>计算p矩阵</div>
+            <pre id="code_block">
+                <span><code>def calculate_kendalltau_correlation_bp(X, Y):</code></span>
+                <span><code>    return stats.kendalltau(X, Y,variant='b')[1]</code></span>
+                <span><code></code></span>
+                <span><code>arr = []</code></span>
+                <span><code>for a in feature:</code></span>
+                <span><code>    arr2 = []</code></span>
+                <span><code>    for b in feature:</code></span>
+                <span><code>        kendalltau_bp = calculate_kendalltau_correlation_bp(wine[a], wine[b])</code></span>
+                <span><code>        arr2.append(kendalltau_bp)</code></span>
+                <span><code>    arr.append(arr2)</code></span>
+                <span><code>data = pd.DataFrame(arr)</code></span>
+            </pre>
+            <img src="../static/Math/mathematicalModeling/71.png">
+            <img src="../static/Math/mathematicalModeling/72.png">
+    </ol>
 </body>
 </html>
