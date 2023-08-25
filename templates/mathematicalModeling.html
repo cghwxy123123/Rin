@@ -12,7 +12,12 @@
         div{
             font-size:20px;
         }
+        a:link {color: black}
+        a:visited {color: black}
+        a:hover {color: black}
+        a:active {color: black}
     </style>
+    <base target="_blank">
 </head>
 <body>
     <div class="tit">
@@ -1825,6 +1830,580 @@
             </pre>
             <img src="../static/Math/mathematicalModeling/71.png">
             <img src="../static/Math/mathematicalModeling/72.png">
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">灰度预测</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <ol type="i">
+                <li>
+                    <div>生成累加数据</div>
+                    <div><img src="../static/Math/mathematicalModeling/73.png"></div>
+                </li>
+                <li>
+                    <div>累加后的数据表达式</div>
+                    <div><img src="../static/Math/mathematicalModeling/74.png"></div>
+                </li>
+                <li>
+                    <div>求解2.2的未知参数</div>
+                    <div><img src="../static/Math/mathematicalModeling/75.png"></div>
+                </li>
+
+            </ol>
+        </li>
+        <li>
+            <div>使用场景</div>
+            <div>数据量小的中短期的预测，似于指数增长的预测</div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>现有1997—2002年各项指标相关统计数据如下表：</div>
+            <table border="4">
+                <tr>
+                    <th>年份</th>
+                    <th>第一产业GDP</th>
+                    <th>居民消费价格指数</th>
+                    <th>第三产业GDP</th>
+                </tr>
+                <tr>
+                    <td>1997</td>
+                    <td>72.03</td>
+                    <td>241.2</td>
+                    <td>1592.74</td>
+                </tr>
+                <tr>
+                    <td>1998</td>
+                    <td>73.84</td>
+                    <td>241.2</td>
+                    <td>1855.36</td>
+                </tr>
+                <tr>
+                    <td>1999</td>
+                    <td>74.49</td>
+                    <td>244.8</td>
+                    <td>2129.6</td>
+                </tr>
+                <tr>
+                    <td>2000</td>
+                    <td>76.68</td>
+                    <td>250.9</td>
+                    <td>2486.86</td>
+                </tr>
+                <tr>
+                    <td>2001</td>
+                    <td>78.0</td>
+                    <td>250.9</td>
+                    <td>2728.94</td>
+                </tr>
+                <tr>
+                    <td>2002</td>
+                    <td>79.68</td>
+                    <td>252.2</td>
+                    <td>3038.9</td>
+                </tr>
+            </table>
+            <div>已知实际的预测数据如下：</div>
+            <table border="4">
+                <tr>
+                    <th>年份</th>
+                    <th>第一产业GDP</th>
+                    <th>居民消费价格指数</th>
+                    <th>第三产业GDP</th>
+                </tr>
+                <tr>
+                    <td>2003</td>
+                    <td>81.21</td>
+                    <td>256.5</td>
+                    <td>3458.05</td>
+                </tr>
+                <tr>
+                    <td>2004</td>
+                    <td>82.84</td>
+                    <td>259.4</td>
+                    <td>3900.27</td>
+                </tr>
+                <tr>
+                    <td>2005</td>
+                    <td>84.5</td>
+                    <td>262.4</td>
+                    <td>4399.06</td>
+                </tr>
+                <tr>
+                    <td>2006</td>
+                    <td>86.19</td>
+                    <td>265.3</td>
+                    <td>4961.62</td>
+                </tr>
+                <tr>
+                    <td>2007</td>
+                    <td>87.92</td>
+                    <td>268.3</td>
+                    <td>5596.13</td>
+                </tr>
+                <tr>
+                    <td>2008</td>
+                    <td>89.69</td>
+                    <td>271.4</td>
+                    <td>6311.79</td>
+                </tr>
+                <tr>
+                    <td>2009</td>
+                    <td>91.49</td>
+                    <td>274.5</td>
+                    <td>7118.96</td>
+                </tr>
+            </table>
+            <pre id="code_block">
+                <span><code>import numpy as np</code></span>
+                <span><code></code></span>
+                <span><code># 原数据</code></span>
+                <span><code>data = np.array([[72.03, 241.2, 1592.74], [73.84, 241.2, 1855.36], [74.49, 244.8, 2129.60], [76.68, 250.9, 2486.86],</code></span>
+                <span><code>                 [78.00, 250.9, 2728.94], [79.68, 252.2, 3038.90]])</code></span>
+                <span><code># 要预测数据的真实值</code></span>
+                <span><code>data_T = np.array([[81.21, 256.5, 3458.05], [82.84, 259.4, 3900.27], [84.5, 262.4, 4399.06], [86.19, 265.3, 4961.62],</code></span>
+                <span><code>                   [87.92, 268.3, 5596.1], [89.69, 271.4, 6311.79], [91.49, 274.5, 7118.96]])</code></span>
+            </pre>
+            <div>灰度预测</div>
+            <pre id="code_block">
+                <span><code># 累加数据</code></span>
+                <span><code>data1 = np.cumsum(data.T, 1)</code></span>
+                <span><code></code></span>
+                <span><code>[m, n] = data1.shape  # 得到行数和列数</code></span>
+                <span><code># 对这三列分别进行预测</code></span>
+                <span><code>X = [i for i in range(1997, 2003)]  # 已知年份数据</code></span>
+                <span><code>X = np.array(X)</code></span>
+                <span><code>X_p = [i for i in range(2003, 2010)]  # 预测年份数据</code></span>
+                <span><code>X_p = np.array(X_p)</code></span>
+                <span><code>X_sta = X[0] - 1  # 最开始参考数据</code></span>
+                <span><code># 求解未知数</code></span>
+                <span><code>for j in range(3):</code></span>
+                <span><code>    B = np.zeros((n - 1, 2))</code></span>
+                <span><code>    for i in range(n - 1):</code></span>
+                <span><code>        B[i, 0] = -1 / 2 * (data1[j, i] + data1[j, i + 1])</code></span>
+                <span><code>        B[i, 1] = 1</code></span>
+                <span><code>    Y = data.T[j, 1:7]</code></span>
+                <span><code>    a_u = np.dot(np.dot(np.linalg.inv(np.dot(B.T, B)), B.T), Y.T)</code></span>
+                <span><code>    #     print(a_u)</code></span>
+                <span><code>    # 进行数据预测</code></span>
+                <span><code>    a = a_u[0]</code></span>
+                <span><code>    u = a_u[1]</code></span>
+                <span><code>    print(np.array([a,u]))</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/76.png"></div>
+            <div>误差分析及可视化</div>
+            <div>由于可视化及误差代码嵌套在计算代码中，故附上完整代码</div>
+            <pre id="code_block">
+                <span><code>import matplotlib.pyplot as plt</code></span>
+                <span><code>import matplotlib as mpl</code></span>
+                <span><code></code></span>
+                <span><code>mpl.rcParams['font.sans-serif'] = ['SimHei']</code></span>
+                <span><code>mpl.rcParams['axes.unicode_minus'] = False</code></span>
+                <span><code></code></span>
+                <span><code>import numpy as np</code></span>
+                <span><code></code></span>
+                <span><code># 原数据</code></span>
+                <span><code>data = np.array([[72.03, 241.2, 1592.74], [73.84, 241.2, 1855.36], [74.49, 244.8, 2129.60], [76.68, 250.9, 2486.86],</code></span>
+                <span><code>                 [78.00, 250.9, 2728.94], [79.68, 252.2, 3038.90]])</code></span>
+                <span><code># 要预测数据的真实值</code></span>
+                <span><code>data_T = np.array([[81.21, 256.5, 3458.05], [82.84, 259.4, 3900.27], [84.5, 262.4, 4399.06], [86.19, 265.3, 4961.62],</code></span>
+                <span><code>                   [87.92, 268.3, 5596.1], [89.69, 271.4, 6311.79], [91.49, 274.5, 7118.96]])</code></span>
+                <span><code></code></span>
+                <span><code># 累加数据</code></span>
+                <span><code>data1 = np.cumsum(data.T, 1)</code></span>
+                <span><code></code></span>
+                <span><code>[m, n] = data1.shape  # 得到行数和列数</code></span>
+                <span><code># 对这三列分别进行预测</code></span>
+                <span><code>X = [i for i in range(1997, 2003)]  # 已知年份数据</code></span>
+                <span><code>X = np.array(X)</code></span>
+                <span><code>X_p = [i for i in range(2003, 2010)]  # 预测年份数据</code></span>
+                <span><code>X_p = np.array(X_p)</code></span>
+                <span><code>X_sta = X[0] - 1  # 最开始参考数据</code></span>
+                <span><code># 求解未知数</code></span>
+                <span><code>fig, ax = plt.subplots(2, 2)</code></span>
+                <span><code>fig.tight_layout(h_pad=2)</code></span>
+                <span><code>plt.subplots_adjust(top=0.9)</code></span>
+                <span><code>for j in range(3):</code></span>
+                <span><code>    B = np.zeros((n - 1, 2))</code></span>
+                <span><code>    for i in range(n - 1):</code></span>
+                <span><code>        B[i, 0] = -1 / 2 * (data1[j, i] + data1[j, i + 1])</code></span>
+                <span><code>        B[i, 1] = 1</code></span>
+                <span><code>    Y = data.T[j, 1:7]</code></span>
+                <span><code>    a_u = np.dot(np.dot(np.linalg.inv(np.dot(B.T, B)), B.T), Y.T)</code></span>
+                <span><code>    #     print(a_u)</code></span>
+                <span><code>    # 进行数据预测</code></span>
+                <span><code>    a = a_u[0]</code></span>
+                <span><code>    u = a_u[1]</code></span>
+                <span><code>    # print(np.array([a,u]))</code></span>
+                <span><code>    T = [i for i in range(1997, 2010)]</code></span>
+                <span><code>    T = np.array(T)</code></span>
+                <span><code>    data_p = (data1[0, j] - u / a) * np.exp(-a * (T - X_sta - 1)) + u / a  # 累加数据</code></span>
+                <span><code>    #     print(data_p)</code></span>
+                <span><code>    data_p1 = data_p</code></span>
+                <span><code>    data_p1[1:len(data_p)] = data_p1[1:len(data_p)] - data_p1[0:len(data_p) - 1]</code></span>
+                <span><code>    #     print(data_p1)</code></span>
+                <span><code>    title_str = ['第一产业GDP预测', '居民消费价格指数预测', '第三产业GDP预测']</code></span>
+                <span><code>    plt.subplot(221 + j)</code></span>
+                <span><code>    data_n = data_p1</code></span>
+                <span><code>    plt.scatter(range(1997, 2003), data[:, j])</code></span>
+                <span><code>    plt.plot(range(1997, 2003), data_n[X - X_sta])</code></span>
+                <span><code>    plt.scatter(range(2003, 2010), data_T[:, j])</code></span>
+                <span><code>    plt.plot(range(2003, 2010), data_n[X_p - X_sta - 1])</code></span>
+                <span><code>    plt.legend(['实际原数据', '拟合数据', '预测参考数据', '预测数据'])</code></span>
+                <span><code>    y_n = data_n[X_p - X_sta - 1].T</code></span>
+                <span><code>    y = data_T[:, j]</code></span>
+                <span><code>    wucha = sum(abs(y_n - y) / y) / len(y)</code></span>
+                <span><code>    titlestr1 = title_str[j]</code></span>
+                <span><code>    print(title_str[j], '预测相对误差：', wucha)</code></span>
+                <span><code>    plt.title(titlestr1)</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/77.png"></div>
+            <div><img src="../static/Math/mathematicalModeling/78.png"></div>
+        </li>
+
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">贝叶斯优化</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>作用：</div>
+            <div>机器学习中调参</div>
+        </li>
+        <li>
+            <div>优点：</div>
+            <ul type="disc">
+                <li>贝叶斯调参采用高斯过程，考虑之前的参数信息，不断地更新先验；网格搜索未考虑之前的参数信息</li>
+                <li>贝叶斯调参迭代次数少，速度快；网格搜索速度慢,参数多时易导致维度爆炸</li>
+                <li>贝叶斯调参针对非凸问题依然稳健；网格搜索针对非凸问题易得到局部优最</li>
+            </ul>
+        </li>
+        <li>
+            <div>注意</div>
+            <div>目标函数趋于最大值</div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <ol type="i">
+                <li>
+                    <div>生成数据</div>
+                    <pre id="code_block">
+                        <span><code>from sklearn.datasets import make_classification</code></span>
+                        <span><code>from sklearn.ensemble import RandomForestClassifier</code></span>
+                        <span><code>from sklearn.model_selection import cross_val_score</code></span>
+                        <span><code>from bayes_opt import BayesianOptimization</code></span>
+                        <span><code></code></span>
+                        <span><code># 产生随机分类数据集，10个特征， 2个类别</code></span>
+                        <span><code>x, y = make_classification(n_samples=1000, n_features=10, n_classes=2)</code></span>
+                    </pre>
+                </li>
+                <li>
+                    <div>无参调用</div>
+                    <pre id="code_block">
+                        <span><code>rf = RandomForestClassifier()</code></span>
+                        <span><code>print(cross_val_score(rf, x, y, cv=10).mean())</code></span>
+                    </pre>
+                    <div>无参时结果：0.941</div>
+                </li>
+                <li>
+                    <div>贝叶斯调参</div>
+                    <pre id="code_block">
+                        <span><code>def rf_cv(n_estimators, min_samples_split, max_features, max_depth):</code></span>
+                        <span><code>    val = cross_val_score(</code></span>
+                        <span><code>        RandomForestClassifier(n_estimators=int(n_estimators),</code></span>
+                        <span><code>                               min_samples_split=int(min_samples_split),</code></span>
+                        <span><code>                               max_features=min(max_features, 0.999),  # float</code></span>
+                        <span><code>                               max_depth=int(max_depth),</code></span>
+                        <span><code>                               random_state=2</code></span>
+                        <span><code>                               ),</code></span>
+                        <span><code>        x, y, cv=10</code></span>
+                        <span><code>    ).mean()</code></span>
+                        <span><code>    return val</code></span>
+                        <span><code></code></span>
+                        <span><code></code></span>
+                        <span><code>rf_bo = BayesianOptimization(</code></span>
+                        <span><code>    rf_cv,</code></span>
+                        <span><code>    {'n_estimators': (10, 250),</code></span>
+                        <span><code>     'min_samples_split': (2, 25),</code></span>
+                        <span><code>     'max_features': (0.1, 0.999),</code></span>
+                        <span><code>     'max_depth': (5, 15)}</code></span>
+                        <span><code>)</code></span>
+                        <span><code>rf_bo.maximize()</code></span>
+                        <span><code>print(rf_bo.max)</code></span>
+                    </pre>
+                    <div>过程如下：</div>
+                    <div><img src="../static/Math/mathematicalModeling/79.png"></div>
+                    <div>结果如下：</div>
+                    <div><img src="../static/Math/mathematicalModeling/80.png"></div>
+                </li>
+            </ol>
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">基于TPE的贝叶斯优化</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>作用：</div>
+            <div>机器学习中调参</div>
+        </li>
+        <li>
+            <div>优点：</div>
+            <ul type="disc">
+                <li>支持各类提效工具</li>
+                <li>进度条清晰，展示美观，较少怪异警告或报错</li>
+                <li>可推广/拓展至深度学习领域</li>
+            </ul>
+        </li>
+        <li>
+            <div>注意</div>
+            <div>目标函数趋于最小值</div>
+            <div><span>函数参数可见</span><a href="https://github.com/hyperopt/hyperopt/wiki/FMin#21-parameter-expressions">github</a></div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <ol type="i">
+                <li>
+                    <div>导包</div>
+                    <pre id="code_block">
+                        <span><code>from sklearn.datasets import make_classification</code></span>
+                        <span><code>from sklearn.ensemble import RandomForestClassifier</code></span>
+                        <span><code>from sklearn.model_selection import cross_val_score</code></span>
+                        <span><code>from hyperopt import tpe, hp, fmin, STATUS_OK, Trials</code></span>
+                    </pre>
+                </li>
+                <li>
+                    <div>生成数据</div>
+                    <pre id="code_block">
+                        <span><code># 产生随机分类数据集，10个特征， 2个类别</code></span>
+                        <span><code>x, y = make_classification(n_samples=1000, n_features=10, n_classes=2)</code></span>
+                    </pre>
+                </li>
+                <li>
+                    <div>无参调用</div>
+                    <pre id="code_block">
+                        <span><code>print(cross_val_score(rf, x, y, cv=10).mean())</code></span>
+                    </pre>
+                    <div>无参时结果：0.9690000000000001</div>
+                </li>
+                <li>
+                    <div>基于TPE的贝叶斯调参</div>
+                    <pre id="code_block">
+                        <span><code>def hyperparameter_tuning(params):</code></span>
+                        <span><code>    clf = RandomForestClassifier(**params, n_jobs=-1)</code></span>
+                        <span><code>    score = cross_val_score(clf, x, y, cv=5).mean()</code></span>
+                        <span><code>    return {"loss": -score, "status": STATUS_OK}</code></span>
+                        <span><code></code></span>
+                        <span><code>space = {</code></span>
+                        <span><code>    "n_estimators": hp.choice("n_estimators", [*range(10,250,10)]),</code></span>
+                        <span><code>    "min_samples_split": hp.randint("min_samples_split",23)+2,</code></span>
+                        <span><code>    "max_features": hp.uniform("max_features",0.1,0.999),</code></span>
+                        <span><code>    'max_depth':hp.randint('max_depth',5)+10</code></span>
+                        <span><code>}</code></span>
+                        <span><code></code></span>
+                        <span><code># 初始化Trial 对象</code></span>
+                        <span><code>trials = Trials()</code></span>
+                        <span><code></code></span>
+                        <span><code>best = fmin(</code></span>
+                        <span><code>    fn=hyperparameter_tuning,</code></span>
+                        <span><code>    space=space,</code></span>
+                        <span><code>    algo=tpe.suggest,</code></span>
+                        <span><code>    max_evals=100,</code></span>
+                        <span><code>    trials=trials</code></span>
+                        <span><code>)</code></span>
+                        <span><code></code></span>
+                        <span><code>print("Best: {}".format(best))</code></span>
+                    </pre>
+                    <div>结果如下：</div>
+                    <div>100%|██████████| 100/100 [01:02<00:00,  1.60it/s, best loss: -0.9789999999999999]</div>
+                    <div>Best: {'max_depth': 3, 'max_features': 0.8242048339136989, 'min_samples_split': 0, 'n_estimators': 15}</div>
+                    <div>使用trials对象分析结果</div>
+                    <ul type="disc">
+                        <li>
+                            <div>trials.results</div>
+                            <div>这显示搜索期间“objective”返回的词典列表。</div>
+                        </li>
+                        <li>
+                            <div>trials.losses()</div>
+                            <div>这显示了一个损失列表</div>
+                        </li>
+                        <li>
+                            <div>trials.statuses()</div>
+                            <div>这将显示状态字符串的列表。</div>
+                        </li>
+                    </ul>
+                </li>
+            </ol>
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">基于optuna库贝叶斯优化</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>作用：</div>
+            <div>机器学习中调参</div>
+        </li>
+        <li>
+            <div>优点：</div>
+            <ul type="disc">
+                <li>代码最简洁，同时具备一定的灵活性</li>
+                <li>可推广/拓展至深度学习领域</li>
+            </ul>
+        </li>
+        <li>
+            <div>注意</div>
+            <div><span>基础代码</span><a href="https://tigeraus.gitee.io/doc-optuna-chinese-build/">官方文档</a></div>
+            <div><span>绘图</span><a href="https://optuna.readthedocs.io/zh_CN/latest/tutorial/10_key_features/005_visualization.html">官方文档</a></div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <ol type="i">
+                <li>
+                    <div>导包</div>
+                    <pre id="code_block">
+                        <span><code>import optuna</code></span>
+                        <span><code>from sklearn.datasets import make_classification</code></span>
+                        <span><code>from sklearn.ensemble import RandomForestClassifier</code></span>
+                        <span><code>from sklearn.model_selection import cross_val_score</code></span>
+                    </pre>
+                </li>
+                <li>
+                    <div>生成数据</div>
+                    <pre id="code_block">
+                        <span><code># 产生随机分类数据集，10个特征， 2个类别</code></span>
+                        <span><code>x, y = make_classification(n_samples=1000, n_features=10, n_classes=2)</code></span>
+                    </pre>
+                </li>
+                <li>
+                    <div>无参调用</div>
+                    <pre id="code_block">
+                        <span><code>print(cross_val_score(rf, x, y, cv=10).mean())</code></span>
+                    </pre>
+                    <div>无参时结果：0.915</div>
+                </li>
+                <li>
+                    <div>基于optuna库的贝叶斯调参</div>
+                    <pre id="code_block">
+                        <span><code>def objective(trial):</code></span>
+                        <span><code>    n_estimators = trial.suggest_int('n_estimators', 10, 250, 10)</code></span>
+                        <span><code>    min_samples_split = trial.suggest_int('min_samples_split', 2, 25, 1)</code></span>
+                        <span><code>    max_features = trial.suggest_float('max_features', 0.1, 0.999)</code></span>
+                        <span><code>    max_depth = trial.suggest_int('max_depth', 10, 15)</code></span>
+                        <span><code></code></span>
+                        <span><code>    model = RandomForestClassifier(n_estimators=n_estimators</code></span>
+                        <span><code>                                   , min_samples_split=min_samples_split</code></span>
+                        <span><code>                                   , max_features=max_features</code></span>
+                        <span><code>                                   , max_depth=max_depth</code></span>
+                        <span><code>                                   , n_jobs=-1)</code></span>
+                        <span><code>    score = cross_val_score(model, x, y, cv=5).mean()</code></span>
+                        <span><code>    return score</code></span>
+                        <span><code></code></span>
+                        <span><code></code></span>
+                        <span><code>def optimizer_optuna(n_trials, algo):</code></span>
+                        <span><code>    if algo == 'TPE':</code></span>
+                        <span><code>        algo = optuna.samplers.TPESampler(n_startup_trials=10, n_ei_candidates=24)</code></span>
+                        <span><code>    elif algo == 'GP':</code></span>
+                        <span><code>        from optuna.integration import SkoptSampler</code></span>
+                        <span><code>        import skopt</code></span>
+                        <span><code>        algo = SkoptSampler(skopt_kwargs={'base_estimator': 'GP'</code></span>
+                        <span><code>            , 'n_initial_points': 10</code></span>
+                        <span><code>            , 'acq_func': 'EI'</code></span>
+                        <span><code>                                          }</code></span>
+                        <span><code>                            )</code></span>
+                        <span><code></code></span>
+                        <span><code>    study = optuna.create_study(sampler=algo  # 定义样本抽样的算法</code></span>
+                        <span><code>                                , direction='maximize'  # 定义目标函数优化方向是最大值，还是最小值</code></span>
+                        <span><code>                                )</code></span>
+                        <span><code></code></span>
+                        <span><code>    study.optimize(objective  # 目标函数</code></span>
+                        <span><code>                   , n_trials=n_trials  # 设定最大迭代次数（包括最初观测值）</code></span>
+                        <span><code>                   , show_progress_bar=True  # 要不要展示进度条</code></span>
+                        <span><code>                   )</code></span>
+                        <span><code>    print('best parmas:', study.best_trial.params,</code></span>
+                        <span><code>          '\n', 'best score:', study.best_trial.values)</code></span>
+                        <span><code></code></span>
+                        <span><code>    return study.best_trial.params, study.best_trial.values</code></span>
+                        <span><code></code></span>
+                        <span><code># 执行流程</code></span>
+                        <span><code>import warnings</code></span>
+                        <span><code>warnings.filterwarnings('ignore',message='The objective has been evaluated at this point before.')</code></span>
+                        <span><code></code></span>
+                        <span><code>best_params,best_score=optimizer_optuna(10,'GP') # 小迭代次数代码测试</code></span>
+                        <span><code></code></span>
+                        <span><code>optuna.logging.set_verbosity(optuna.logging.ERROR) # 关闭打印迭代过程</code></span>
+                        <span><code>best_params,best_score=optimizer_optuna(300,'GP')</code></span>
+                    </pre>
+                    <div>结果如下：</div>
+                    <ul type="disc">
+                        <li>
+                            <div>小迭代次数结果：</div>
+                            <div><img src="../static/Math/mathematicalModeling/81.png"></div>
+                            <div>best parmas: {'n_estimators': 180, 'min_samples_split': 9, 'max_features': 0.6381708223147099, 'max_depth': 11} </div>
+                            <div>best score: [0.9179999999999999]</div>
+                        </li>
+                        <li>
+                            <div>大迭代次数结果：</div>
+                            <div>Best trial: 42. Best value: 0.92: 100%|██████████| 300/300 [09:58<00:00,  2.00s/it]</div>
+                            <div>best parmas: {'n_estimators': 110, 'min_samples_split': 2, 'max_features': 0.3405523360038925, 'max_depth': 15}</div>
+                            <div>best score: [0.9199999999999999]</div>
+                        </li>
+                    </ul>
+                    <div>数据保存</div>
+                    <pre id="code_block">
+                        <span><code>study_name = 'example-study'  # 不同的 study 不能使用相同的名字。因为当存储在同一个数据库中时，这是区分不同 study 的标识符.</code></span>
+                        <span><code>study = optuna.create_study(study_name=study_name, storage='sqlite:///example.db')</code></span>
+                        <span><code>study.optimize(objective, n_trials=300)</code></span>
+                    </pre>
+                    <div>数据读取</div>
+                    <pre id="code_block">
+                        <span><code>study = optuna.create_study(study_name='example-study', storage='sqlite:///example.db', load_if_exists=True)</code></span>
+                    </pre>
+                    <div>转换为dataframe</div>
+                    <pre id="code_block">
+                        <span><code>df = study.trials_dataframe(attrs=('number', 'value', 'params', 'state'))</code></span>
+                    </pre>
+                    <div>可视化</div>
+                    <div>通用代码</div>
+                    <pre id="code_block">
+                        <span><code>import plotly</code></span>
+                        <span><code>graph_cout = optuna.visualization.接口(study,param=['',''])(也可以不要param)</code></span>
+                        <span><code>plotly.offline.plot(graph_cout)</code></span>
+                    </pre>
+                    <ul type="disc">
+                        <li>
+                            <div>plot_contour</div>
+                            <div><img src="../static/Math/mathematicalModeling/82.png"></div>
+                        </li>
+                        <li>
+                            <div>plot_optimization_history</div>
+                            <div><img src="../static/Math/mathematicalModeling/83.png"></div>
+                        </li>
+                        <li>
+                            <div>plot_parallel_coordinate</div>
+                            <div><img src="../static/Math/mathematicalModeling/84.png"></div>
+                        </li>
+                        <li>
+                            <div>plot_intermediate_values</div>
+                        </li>
+                        <li>
+                            <div>plot_slice</div>
+                            <div><img src="../static/Math/mathematicalModeling/85.png"></div>
+                        </li>
+                        <li>
+                            <div>plot_param_importances</div>
+                            <div><img src="../static/Math/mathematicalModeling/86.png"></div>
+                        </li>
+                        <li>
+                            <div>plot_edf</div>
+                            <div><img src="../static/Math/mathematicalModeling/87.png"></div>
+                        </li>
+                    </ul>
+                </li>
+            </ol>
+        </li>
     </ol>
 </body>
 </html>
