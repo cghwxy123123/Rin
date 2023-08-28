@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>mathematicalModeling</title>
+    <title>mathematical modeling</title>
     <link href="../static/css/code.css" rel="stylesheet" type="text/css">
     <style>
         .tit{
@@ -2405,5 +2405,1914 @@
             </ol>
         </li>
     </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">TOPSIS综合评价方法</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <ol type="i">
+                <li>
+                    <div>数据处理</div>
+                    <ul type="disc">
+                        <li>
+                            <div>对于极小型指标的正向化处理</div>
+                            <div><img src="../static/Math/mathematicalModeling/88.png"></div>
+                        </li>
+                        <li>
+                            <div>对于中间型指标的正向化处理</div>
+                            <div>我们可以取M=max{|x-middle|}</div>
+                            <div><img src="../static/Math/mathematicalModeling/89.png"></div>
+                        </li>
+                        <li>
+                            <div>对于区间型指标的正向化处理</div>
+                            <div>如果其最佳区间是[a,b]，我们取M=max{a-min{x},max{x}-b}</div>
+                            <div><img src="../static/Math/mathematicalModeling/90.png"></div>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    <div>数据标准化处理</div>
+                    <div><img src="../static/Math/mathematicalModeling/91.png"></div>
+                </li>
+                <li>
+                    <div>最优解与最劣解计算</div>
+                    <div><img src="../static/Math/mathematicalModeling/92.png"></div>
+                </li>
+                <li>
+                    <div>TOPSIS评分计算</div>
+                    <div>计算它与最优解的距离和与最劣解的距离，求综合距离：</div>
+                    <div><img src="../static/Math/mathematicalModeling/93.png"></div>
+                </li>
+            </ol>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <pre id="code_block">
+                <span><code>class TOPSIS:</code></span>
+                <span><code>    def __init__(self, dataframe):</code></span>
+                <span><code>        self.file = dataframe</code></span>
+                <span><code>        self.finished = []</code></span>
+                <span><code>        self.dict_finished = {}</code></span>
+                <span><code>        self.dict_sorted = {}</code></span>
+                <span><code></code></span>
+                <span><code>    def append(self, column, mode, middle_target=None, district=None):</code></span>
+                <span><code>        """</code></span>
+                <span><code>        :param mode 'max'   'min'   'middle'    'district'</code></span>
+                <span><code>        """</code></span>
+                <span><code>        df = self.file[column]</code></span>
+                <span><code></code></span>
+                <span><code>        def standard(df):</code></span>
+                <span><code>            num = 0</code></span>
+                <span><code>            for a in list(df):</code></span>
+                <span><code>                num += a ** 2</code></span>
+                <span><code>            num = sqrt(num)</code></span>
+                <span><code>            return pd.Series(a / num for a in list(df))</code></span>
+                <span><code></code></span>
+                <span><code>        if mode == "max":</code></span>
+                <span><code>            df = standard(df)</code></span>
+                <span><code>            self.file[f'{column}_finished'] = df</code></span>
+                <span><code>            self.finished.append(f'{column}_finished')</code></span>
+                <span><code>        elif mode == 'min':</code></span>
+                <span><code>            sum = max(list(df))</code></span>
+                <span><code>            df = standard(pd.Series([(sum - a) for a in list(df)]))</code></span>
+                <span><code>            self.file[f'{column}_finished'] = df</code></span>
+                <span><code>            self.finished.append(f'{column}_finished')</code></span>
+                <span><code>        elif mode == 'middle':</code></span>
+                <span><code>            df = pd.Series([(abs(a - middle_target)) for a in list(df)])</code></span>
+                <span><code>            sum = max(list(df))</code></span>
+                <span><code>            df = standard(pd.Series([(sum - a) for a in list(df)]))</code></span>
+                <span><code>            self.file[f'{column}_finished'] = df</code></span>
+                <span><code>            self.finished.append(f'{column}_finished')</code></span>
+                <span><code>        elif mode == 'district':</code></span>
+                <span><code>            mini = min(list(df))</code></span>
+                <span><code>            maxi = max(list(df))</code></span>
+                <span><code>            M = max(district[0] - mini, maxi - district[1])</code></span>
+                <span><code></code></span>
+                <span><code>            def transfer(num):</code></span>
+                <span><code>                if num < district[0]:</code></span>
+                <span><code>                    return 1 - (district[0] - num) / M</code></span>
+                <span><code>                elif num > district[1]:</code></span>
+                <span><code>                    return 1 - (num - district[1]) / M</code></span>
+                <span><code>                else:</code></span>
+                <span><code>                    return 1</code></span>
+                <span><code></code></span>
+                <span><code>            df = standard(pd.Series([transfer(a) for a in list(df)]))</code></span>
+                <span><code>            self.file[f'{column}_finished'] = df</code></span>
+                <span><code>            self.finished.append(f'{column}_finished')</code></span>
+                <span><code></code></span>
+                <span><code>    def remove(self, column):</code></span>
+                <span><code>        self.finished.remove(column)</code></span>
+                <span><code></code></span>
+                <span><code>    def evaluate(self, type_name):</code></span>
+                <span><code>        maxs = []</code></span>
+                <span><code>        mins = []</code></span>
+                <span><code>        for a in self.finished:</code></span>
+                <span><code>            maxs.append(max(self.file[a]))</code></span>
+                <span><code>            mins.append(min(self.file[a]))</code></span>
+                <span><code></code></span>
+                <span><code>        def distance(lst1, lst2):</code></span>
+                <span><code>            num = 0</code></span>
+                <span><code>            for a, b in zip(lst1, lst2):</code></span>
+                <span><code>                num += (a - b) ** 2</code></span>
+                <span><code>            return sqrt(num)</code></span>
+                <span><code></code></span>
+                <span><code>        points = []</code></span>
+                <span><code>        names = []</code></span>
+                <span><code>        for a in range(len(self.file[type_name])):</code></span>
+                <span><code>            names.append(self.file[type_name][a])</code></span>
+                <span><code>            points.append(list(np.array(self.file.loc[[a], self.finished])[0]))</code></span>
+                <span><code>        dict = {}</code></span>
+                <span><code>        for a, b in zip(names, points):</code></span>
+                <span><code>            dict[a] = distance(b, mins) / (distance(b, maxs) + distance(b, mins))</code></span>
+                <span><code>        num = sum(dict.values())</code></span>
+                <span><code>        for a, b in zip(dict.keys(), dict.values()):</code></span>
+                <span><code>            dict[a] = b / num</code></span>
+                <span><code>        self.dict_finished = dict</code></span>
+                <span><code>        return dict</code></span>
+                <span><code></code></span>
+                <span><code>    def clear(self):</code></span>
+                <span><code>        self.dict_finished = {}</code></span>
+                <span><code>        self.dict_sorted = {}</code></span>
+                <span><code></code></span>
+                <span><code>    def sort(self):</code></span>
+                <span><code>        names = list(self.dict_finished.keys())</code></span>
+                <span><code>        points = list(self.dict_finished.values())</code></span>
+                <span><code>        for a in range(len(names) - 1):</code></span>
+                <span><code>            for b in range(a + 1, len(names)):</code></span>
+                <span><code>                if points[a] < points[b]:</code></span>
+                <span><code>                    temp = points[a]</code></span>
+                <span><code>                    points[a] = points[b]</code></span>
+                <span><code>                    points[b] = temp</code></span>
+                <span><code>                    temp = names[a]</code></span>
+                <span><code>                    names[a] = names[b]</code></span>
+                <span><code>                    names[b] = temp</code></span>
+                <span><code>        dict = {}</code></span>
+                <span><code>        for a, b in zip(names, points):</code></span>
+                <span><code>            dict[a] = b</code></span>
+                <span><code>        self.dict_sorted = dict</code></span>
+                <span><code>        return dict</code></span>
+            </pre>
+        </li>
+        <li>
+            <div>实例求解</div>
+            <div>数据如下：</div>
+            <table border="4">
+                <tr>
+                    <th>River</th>
+                    <th>oxygen</th>
+                    <th>PH</th>
+                    <th>bacteria</th>
+                    <th>waterplants</th>
+                </tr>
+                <tr>
+                    <td>A</td>
+                    <td>0.84</td>
+                    <td>3</td>
+                    <td>14634</td>
+                    <td>4317</td>
+                </tr>
+                <tr>
+                    <td>B</td>
+                    <td>0.37</td>
+                    <td>2</td>
+                    <td>4583</td>
+                    <td>460</td>
+                </tr>
+                <tr>
+                    <td>C</td>
+                    <td>0.65</td>
+                    <td>4</td>
+                    <td>9301</td>
+                    <td>2563</td>
+                </tr>
+                <tr>
+                    <td>D</td>
+                    <td>0.22</td>
+                    <td>8</td>
+                    <td>14616</td>
+                    <td>887</td>
+                </tr>
+                <tr>
+                    <td>E</td>
+                    <td>0.09</td>
+                    <td>9</td>
+                    <td>3700</td>
+                    <td>1170</td>
+                </tr>
+                <tr>
+                    <td>F</td>
+                    <td>0.74</td>
+                    <td>1</td>
+                    <td>395</td>
+                    <td>2610</td>
+                </tr>
+                <tr>
+                    <td>G</td>
+                    <td>0.43</td>
+                    <td>11</td>
+                    <td>3706</td>
+                    <td>1489</td>
+                </tr>
+                <tr>
+                    <td>H</td>
+                    <td>0.88</td>
+                    <td>2</td>
+                    <td>3930</td>
+                    <td>4988</td>
+                </tr>
+                <tr>
+                    <td>I</td>
+                    <td>0.25</td>
+                    <td>8</td>
+                    <td>18772</td>
+                    <td>3439</td>
+                </tr>
+                <tr>
+                    <td>J</td>
+                    <td>0.87</td>
+                    <td>5</td>
+                    <td>18013</td>
+                    <td>4549</td>
+                </tr>
+                <tr>
+                    <td>K</td>
+                    <td>0.26</td>
+                    <td>5</td>
+                    <td>5269</td>
+                    <td>2600</td>
+                </tr>
+                <tr>
+                    <td>L</td>
+                    <td>0.41</td>
+                    <td>2</td>
+                    <td>2774</td>
+                    <td>2846</td>
+                </tr>
+                <tr>
+                    <td>M</td>
+                    <td>0.53</td>
+                    <td>9</td>
+                    <td>14141</td>
+                    <td>3820</td>
+                </tr>
+                <tr>
+                    <td>N</td>
+                    <td>0.23</td>
+                    <td>11</td>
+                    <td>786</td>
+                    <td>2527</td>
+                </tr>
+            </table>
+            <pre id="code_block">
+                <span><code>data = pd.read_csv("water.csv")</code></span>
+                <span><code>topsis = TOPSIS(data)</code></span>
+                <span><code>topsis.append('waterplants', 'district', district=[500, 1000])</code></span>
+                <span><code>topsis.append('oxygen','max')</code></span>
+                <span><code>topsis.append('PH','middle',middle_target=7)</code></span>
+                <span><code>topsis.append('bacteria','min')</code></span>
+                <span><code>topsis.evaluate('River')</code></span>
+                <span><code>topsis.sort()</code></span>
+                <span><code>print(topsis.dict_sorted)</code></span>
+            </pre>
+            <div>结果如下：</div>
+            <div>{'G': 0.0818402297874214, 'E': 0.0813325358570309, 'C': 0.0809361664748927, 'K': 0.0782292415468525, 'D': 0.0772586744230196, 'B': 0.0745489156224116, 'F': 0.0737510000691358, 'N': 0.0716558654660967, 'L': 0.0665053239819720, 'J': 0.0651650850235762, 'M': 0.0647876782651021, 'H': 0.0646685161574278, 'I': 0.0602932909811161, 'A': 0.0590274763439446}</div>
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">LinearRegression线性回归</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <div>线性回归模型</div>
+            <div><img src="../static/Math/mathematicalModeling/94.png"></div>
+            <div>损失函数</div>
+            <div><img src="../static/Math/mathematicalModeling/95.png"></div>
+            <div>梯度下降训练</div>
+            <div><img src="../static/Math/mathematicalModeling/96.png"></div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <ul type="disc">
+                <li>
+                    <div>单变量</div>
+                    <div>导入数据</div>
+                    <pre id="code_block">
+                        <span><code>import pandas as pd</code></span>
+                        <span><code>df = pd.read_csv('world-happiness-report-2017.csv')</code></span>
+                        <span><code>y = df[['Happiness.Score']].values</code></span>
+                        <span><code>x = df[['Economy..GDP.per.Capita.']].values</code></span>
+                        <span><code></code></span>
+                        <span><code>from sklearn.model_selection import train_test_split</code></span>
+                        <span><code>xtrain,xtest,ytrain,ytest = train_test_split(x,y)</code></span>
+                    </pre>
+                    <div>开始训练</div>
+                    <pre id="code_block">
+                        <span><code>from sklearn.model_selection import cross_val_score</code></span>
+                        <span><code>from sklearn.linear_model import LinearRegression</code></span>
+                        <span><code></code></span>
+                        <span><code>lr = LinearRegression()</code></span>
+                        <span><code>lr.fit(xtrain,ytrain)</code></span>
+                        <span><code>print('b:',lr.intercept_)</code></span>
+                        <span><code>print('w',lr.coef_)</code></span>
+                        <span><code>print('mse',cross_val_score(lr,xtrain,ytrain,cv=10).mean())</code></span>
+                    </pre>
+                    <div>结果如下：</div>
+                    <div>b: [3.18243203]</div>
+                    <div>w [[2.26404324]]</div>
+                    <div>mse 0.4562094339350504</div>
+                    <div>可视化</div>
+                    <pre id="code_block">
+                        <span><code>import matplotlib.pyplot as plt</code></span>
+                        <span><code>plt.xlabel('Economy..GDP.per.Capita.')</code></span>
+                        <span><code>plt.ylabel('Happiness.Score')</code></span>
+                        <span><code>plt.scatter(xtrain,ytrain,c='b',label='train')</code></span>
+                        <span><code>plt.scatter(xtest,ytest,c='g',label='test')</code></span>
+                        <span><code>d = np.linspace(0,1.75,50)</code></span>
+                        <span><code>plt.plot(d,lr.predict(d.reshape(-1,1)),c='r')</code></span>
+                        <span><code>plt.legend()</code></span>
+                        <span><code>plt.show()</code></span>
+                    </pre>
+                    <div><img src="../static/Math/mathematicalModeling/97.png"></div>
+                </li>
+                <li>
+                    <div>多变量</div>
+                    <div>数据导入只需修改</div>
+                    <pre id="code_block">
+                        <span><code>x = df[['Economy..GDP.per.Capita.','Health..Life.Expectancy.']]</code></span>
+                    </pre>
+                    <div>结果如下：</div>
+                    <div>结果如下：</div>
+                    <div>b: [3.02154144]</div>
+                    <div>w [[1.33088889 1.85014173]]</div>
+                    <div>mse 0.334704357723213</div>
+                </li>
+            </ul>
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">KNN K近邻回归</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <div>KNN算法</div>
+            <div><img src="../static/Math/mathematicalModeling/98.png"></div>
+            <div>绿色和蓝色是已知数据，根据已知数据，我们想要知道，红色的点属于哪一类。</div>
+            <div>这是，我们选择的方法是：看距离红色最近的一个点（K=1）是属于哪一类，或者看距离红色最近的两个个点（K=1）或三个点（K=3）是属于哪一类，此时，我们需要在这些点里做投票，看看这个区域内，哪个颜色的点数量多。</div>
+        </li>
+        <li>
+            <div>注意</div>
+            <div>特征中量纲差距过大，导致其中一个或几个特征在计算中基本起不到作用，这是我们需要特征的缩放。</div>
+            <div>线性归一化/标准化</div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>导入数据</div>
+            <pre id="code_block">
+                <span><code>import numpy as np</code></span>
+                <span><code>x = np.linspace(0,5,100).reshape(-1,1)</code></span>
+                <span><code>y = (x**2+np.random.randn(100,1)).reshape(-1,1)</code></span>
+                <span><code>from sklearn.model_selection import train_test_split</code></span>
+                <span><code>xtrain,xtest,ytrain,ytest = train_test_split(x,y)</code></span>
+            </pre>
+            <div>标准化</div>
+            <pre id="code_block">
+                <span><code>from sklearn.preprocessing import StandardScaler</code></span>
+                <span><code>x_std = StandardScaler()</code></span>
+                <span><code>xtrain = x_std.fit_transform(xtrain)</code></span>
+                <span><code>y_std = StandardScaler()</code></span>
+                <span><code>ytrain = y_std.fit_transform(ytrain)</code></span>
+            </pre>
+            <div>开始训练</div>
+            <pre id="code_block">
+                <span><code>from sklearn.model_selection import cross_val_score</code></span>
+                <span><code>from sklearn.neighbors import KNeighborsRegressor</code></span>
+                <span><code></code></span>
+                <span><code>knr = KNeighborsRegressor()</code></span>
+                <span><code>knr.fit(xtrain,ytrain)</code></span>
+                <span><code>print('mse',-cross_val_score(knr,xtrain,ytrain,cv=10,scoring='neg_mean_squared_error').mean())</code></span>
+            </pre>
+            <div>结果如下：</div>
+            <div>mse 0.023608694399218304</div>
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>import matplotlib.pyplot as plt</code></span>
+                <span><code>plt.xlabel('X')</code></span>
+                <span><code>plt.ylabel('y')</code></span>
+                <span><code>d = np.linspace(-2,2,1000).reshape(-1,1)</code></span>
+                <span><code>y_pred = knr.predict(d.reshape(-1,1))</code></span>
+                <span><code>d = x_std.inverse_transform(d)</code></span>
+                <span><code>y_pred = y_std.inverse_transform(y_pred)</code></span>
+                <span><code>xtrain = x_std.inverse_transform(xtrain)</code></span>
+                <span><code>ytrain = y_std.inverse_transform(ytrain)</code></span>
+                <span><code>plt.scatter(xtrain,ytrain,c='b',label='train')</code></span>
+                <span><code>plt.scatter(xtest,ytest,c='g',label='test')</code></span>
+                <span><code>plt.plot(d,y_pred,c='r')</code></span>
+                <span><code>plt.legend()</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/99.png"></div>
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">SVR支持向量机回归</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <div>支持向量机算法</div>
+            <div>SVM与logistic分类器类似，也是一种二类分类模型，其基本模型定义为特征空间上的间隔最大的线性分类器，其学习策略便是间隔最大化，最终可转化为一个凸二次规划问题的求解。</div>
+            <div>对于下面一个数据集，有两类分别使用×和○来表示。那么我们想要找到一条曲线来区分这两类。可想而知，这样的曲线存在无数条，如何找到那一条最优的曲线呢？那就是要找到间隔（Gap）最大的那一条曲线，然后我们就可以根据这条曲线来分类了。而这条曲线，我们称为超平面。图中加粗的×与○，我们则称这些向量为支持向量。</div>
+            <div><img src="../static/Math/mathematicalModeling/100.png"></div>
+            <div>而实际上，我们很少会遇到上面的情况，能直接使用一条直线将数据分类，更多的时候，数据无法通过直线来分类。比如下面这种情况：</div>
+            <div><img src="../static/Math/mathematicalModeling/101.png"></div>
+            <div>当然了，这都不是事，既然在二维上该数据无法使用线性分类，那我们就将数据映射到更高维上，在高维上构造超平面，从而完成分类。</div>
+            <div><img src="../static/Math/mathematicalModeling/102.png"></div>
+            <div>这就是为什么将上面的直线称为超平面。</div>
+            <div>所以对于非线性的模型，我们需要：</div>
+            <ol type="i">
+                <li>使用非线性映射将数据投影至特征空间；</li>
+                <li>在特征空间使用线性分类器；</li>
+            </ol>
+            <div>看似很简单，但是我们在映射时，就会发现当变量增多时，映射到高维空间的维度是呈指数增长的，计算起来十分困难，这时候就需要核函数（kernel function）了。核函数也是将特征从低维到高维进行转换，但是它是先在低维上进行计算，实际的分类效果表现在高维上。这样，我们就避免了在高维上复杂的计算，仍得到相同的结果。</div>
+            <div>一些常用的核函数：</div>
+            <ul type="disc">
+                <li>多项式核</li>
+                <li>高斯核</li>
+                <li>线性核</li>
+            </ul>
+            <div>SVR是要找出一个超平面，使得所有数据到这个超平面的距离最小。</div>
+            <div><img src="../static/Math/mathematicalModeling/103.png"></div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>导入数据</div>
+            <pre id="code_block">
+                <span><code>import numpy as np</code></span>
+                <span><code>x = np.linspace(0,5,100).reshape(-1,1)</code></span>
+                <span><code>y = (x**2+np.random.randn(100,1)).ravel()</code></span>
+                <span><code>from sklearn.model_selection import train_test_split</code></span>
+                <span><code>xtrain,xtest,ytrain,ytest = train_test_split(x,y)</code></span>
+            </pre>
+            <div>开始训练</div>
+            <pre id="code_block">
+                <span><code>from sklearn.model_selection import cross_val_score</code></span>
+                <span><code>from sklearn.svm import SVR</code></span>
+                <span><code>svr = SVR()</code></span>
+                <span><code>svr.fit(xtrain,ytrain)</code></span>
+                <span><code>print('mse',-cross_val_score(svr,xtrain,ytrain,cv=10,scoring='neg_mean_squared_error').mean())</code></span>
+            </pre>
+            <div>结果如下：</div>
+            <div>mse 4.376258150076342</div>
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>import matplotlib.pyplot as plt</code></span>
+                <span><code>plt.xlabel('Economy..GDP.per.Capita.')</code></span>
+                <span><code>plt.ylabel('Happiness.Score')</code></span>
+                <span><code>plt.scatter(xtrain,ytrain,c='b',label='train')</code></span>
+                <span><code>plt.scatter(xtest,ytest,c='g',label='test')</code></span>
+                <span><code>d = np.linspace(0,5,100)</code></span>
+                <span><code>plt.plot(d,svr.predict(d.reshape(-1,1)),c='r')</code></span>
+                <span><code>plt.legend()</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/104.png"></div>
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">Ridge岭回归</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <div>岭回归算法</div>
+            <div>实质上是一种改良的最小二乘估计法，通过放弃最小二乘法的无偏性，以损失部分信息、降低精度为代价获得回归系数更为符合实际、更可靠的回归方法，对病态数据的拟合要强于最小二乘法。</div>
+            <div><img src="../static/Math/mathematicalModeling/105.png"></div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>导入数据</div>
+            <pre id="code_block">
+                <span><code>import pandas as pd</code></span>
+                <span><code>df = pd.read_csv('world-happiness-report-2017.csv')</code></span>
+                <span><code>y = df[['Happiness.Score']].values</code></span>
+                <span><code>x = df[['Economy..GDP.per.Capita.']].values</code></span>
+                <span><code>from sklearn.model_selection import train_test_split</code></span>
+                <span><code>xtrain,xtest,ytrain,ytest = train_test_split(x,y)</code></span>
+            </pre>
+            <div>开始训练</div>
+            <pre id="code_block">
+                <span><code>from sklearn.model_selection import cross_val_score</code></span>
+                <span><code>from sklearn.linear_model import Ridge</code></span>
+                <span><code>ridge = Ridge()</code></span>
+                <span><code>ridge.fit(xtrain,ytrain)</code></span>
+                <span><code>print('intercept',ridge.intercept_)</code></span>
+                <span><code>print('coef',ridge.coef_)</code></span>
+                <span><code>print('mse',-cross_val_score(ridge,xtrain,ytrain,cv=10,scoring='neg_mean_squared_error').mean())</code></span>
+            </pre>
+            <div>结果如下：</div>
+            <div>intercept [3.35416377]</div>
+            <div>coef [[2.03464087]]</div>
+            <div>mse 0.48136721864464976</div>
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>import matplotlib.pyplot as plt</code></span>
+                <span><code>plt.xlabel('X')</code></span>
+                <span><code>plt.ylabel('y')</code></span>
+                <span><code>plt.scatter(xtrain,ytrain,c='b',label='train')</code></span>
+                <span><code>plt.scatter(xtest,ytest,c='g',label='test')</code></span>
+                <span><code>d = np.linspace(0,2,100)</code></span>
+                <span><code>plt.plot(d,ridge.predict(d.reshape(-1,1)),c='r')</code></span>
+                <span><code>plt.legend()</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/106.png"></div>
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">Lasso回归</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <div>Lasso回归算法</div>
+            <div>与ridge回归相似</div>
+            <div>惩罚项不同</div>
+            <div><img src="../static/Math/mathematicalModeling/107.png"></div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>导入数据</div>
+            <pre id="code_block">
+                <span><code>import pandas as pd</code></span>
+                <span><code>df = pd.read_csv('world-happiness-report-2017.csv')</code></span>
+                <span><code>y = df[['Happiness.Score']].values</code></span>
+                <span><code>x = df[['Economy..GDP.per.Capita.']].values</code></span>
+                <span><code>from sklearn.model_selection import train_test_split</code></span>
+                <span><code>xtrain,xtest,ytrain,ytest = train_test_split(x,y)</code></span>
+            </pre>
+            <div>开始训练</div>
+            <pre id="code_block">
+                <span><code>from sklearn.model_selection import cross_val_score</code></span>
+                <span><code>from sklearn.linear_model import Lasso</code></span>
+                <span><code>lasso = Lasso()</code></span>
+                <span><code>lasso.fit(xtrain,ytrain)</code></span>
+                <span><code>print('intercept',lasso.intercept_)</code></span>
+                <span><code>print('coef',lasso.coef_)</code></span>
+                <span><code>print('mse',-cross_val_score(lasso,xtrain,ytrain,cv=10,scoring='neg_mean_squared_error').mean())</code></span>
+            </pre>
+            <div>结果如下：</div>
+            <div>intercept [5.34622034]</div>
+            <div>coef [0.]</div>
+            <div>mse 1.5643626544971814</div>
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>import matplotlib.pyplot as plt</code></span>
+                <span><code>plt.xlabel('X')</code></span>
+                <span><code>plt.ylabel('y')</code></span>
+                <span><code>plt.scatter(xtrain,ytrain,c='b',label='train')</code></span>
+                <span><code>plt.scatter(xtest,ytest,c='g',label='test')</code></span>
+                <span><code>d = np.linspace(0,2,100)</code></span>
+                <span><code>plt.plot(d,lasso.predict(d.reshape(-1,1)),c='r')</code></span>
+                <span><code>plt.legend()</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/108.png"></div>
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">MLP多层感知机回归</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <div>MLP算法</div>
+            <div>MLP是一种常用的前馈神经网络，使用了BP算法的MLP可以被称为BP神经网络。MLP的隐节点采用输入向量与权向量的内积作为激活函数的自变量，激活函数采用Relu函数。各参数对网络的输出具有同等地位的影响，因此MLP是对非线性映射的全局逼近。</div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>导入数据</div>
+            <pre id="code_block">
+                <span><code>import numpy as np</code></span>
+                <span><code>x = np.linspace(0,5,100).reshape(-1, 1)</code></span>
+                <span><code>y = (x**2+np.random.randn(100,1)).ravel()</code></span>
+                <span><code>from sklearn.model_selection import train_test_split</code></span>
+                <span><code>xtrain,xtest,ytrain,ytest = train_test_split(x,y)</code></span>
+            </pre>
+            <div>开始训练</div>
+            <pre id="code_block">
+                <span><code>from sklearn.model_selection import cross_val_score</code></span>
+                <span><code>from sklearn.neural_network import MLPRegressor</code></span>
+                <span><code>mlp = MLPRegressor(max_iter=10000)</code></span>
+                <span><code>mlp.fit(xtrain,ytrain)</code></span>
+                <span><code>print('mse',-cross_val_score(mlp,xtrain,ytrain,cv=10,scoring='neg_mean_squared_error').mean())</code></span>
+            </pre>
+            <div>结果如下：</div>
+            <div>mse 0.9478246625545512</div>
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>import matplotlib.pyplot as plt</code></span>
+                <span><code>plt.xlabel('X')</code></span>
+                <span><code>plt.ylabel('y')</code></span>
+                <span><code>plt.scatter(xtrain,ytrain,c='b',label='train')</code></span>
+                <span><code>plt.scatter(xtest,ytest,c='g',label='test')</code></span>
+                <span><code>d = np.linspace(0,5,100)</code></span>
+                <span><code>plt.plot(d,mlp.predict(d.reshape(-1,1)),c='r')</code></span>
+                <span><code>plt.legend()</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/109.png"></div>
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">DecisionTree决策树回归</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <div>DecisionTree算法</div>
+            <div>决策树是一个预测模型，它代表的是对象属性与对象值之间的一种映射关系。树中每个节点表示某个对象，而每个分叉路径则代表某个可能的属性值，而每个叶节点则对应从根节点到该叶节点所经历的路径所表示的对象的值。</div>
+            <div>一个决策树包含三种类型的节点：</div>
+            <ul type="disc">
+                <li>决策节点：通常用矩形框来表示</li>
+                <li>机会节点：通常用圆圈来表示</li>
+                <li>终结节点：通常用三角形来表示</li>
+            </ul>
+            <div><img src="../static/Math/mathematicalModeling/110.png"></div>
+            <div>决策树是一树状结构，它的每一个叶节点对应着一个分类，非叶节点对应着在某个属性上的划分，根据样本在该属性上的不同取值将其划分成若干个子集。对于非纯的叶节点，多数类的标号给出到达这个节点的样本所属的类。构造决策树的核心问题是在每一步如何选择适当的属性对样本做拆分。对一个分类问题，从已知类标记的训练样本中学习并构造出决策树是一个自上而下，分而治之的过程。</div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>导入数据</div>
+            <pre id="code_block">
+                <span><code>import numpy as np</code></span>
+                <span><code>x = np.linspace(0,5,100).reshape(-1, 1)</code></span>
+                <span><code>y = (x**2+np.random.randn(100,1)).ravel()</code></span>
+                <span><code>from sklearn.model_selection import train_test_split</code></span>
+                <span><code>xtrain,xtest,ytrain,ytest = train_test_split(x,y)</code></span>
+            </pre>
+            <div>开始训练</div>
+            <pre id="code_block">
+                <span><code>from sklearn.model_selection import cross_val_score</code></span>
+                <span><code>from sklearn.tree import DecisionTreeRegressor</code></span>
+                <span><code>dtr = DecisionTreeRegressor(max_depth=5)</code></span>
+                <span><code>dtr.fit(xtrain,ytrain)</code></span>
+                <span><code>print('mse',-cross_val_score(dtr,xtrain,ytrain,cv=10,scoring='neg_mean_squared_error').mean())</code></span>
+            </pre>
+            <div>结果如下：</div>
+            <div>mse 1.364876322693921</div>
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>import matplotlib.pyplot as plt</code></span>
+                <span><code>plt.xlabel('X')</code></span>
+                <span><code>plt.ylabel('y')</code></span>
+                <span><code>plt.scatter(xtrain,ytrain,c='b',label='train')</code></span>
+                <span><code>plt.scatter(xtest,ytest,c='g',label='test')</code></span>
+                <span><code>d = np.linspace(0,5,100)</code></span>
+                <span><code>plt.plot(d,dtr.predict(d.reshape(-1,1)),c='r')</code></span>
+                <span><code>plt.legend()</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/111.png"></div>
+        </li>
+    </ol>'
+    <div class="tit">
+        <span style="color:red;font-size:40px;">ExtraTrees极端随机树回归</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <div>ExtraTrees算法</div>
+            <div>RandomForest的一个变种</div>
+            <ul type="disc">
+                <li>对于每个决策树的训练集，RF采用的是随机采样bootstrap来选择采样集作为每个决策树的训练集，而extra trees一般不采用随机采样，即每个决策树采用原始训练集。</li>
+                <li>在选定了划分特征后，RF的决策树会基于基尼系数，均方差之类的原则，选择一个最优的特征值划分点，这和传统的决策树相同。但是extra trees比较的激进，他会随机的选择一个特征值来划分决策树。</li>
+            </ul>
+            <div>从第二点可以看出，由于随机选择了特征值的划分点位，而不是最优点位，这样会导致生成的决策树的规模一般会大于RF所生成的决策树。也就是说，模型的方差相对于RF进一步减少，但是偏差相对于RF进一步增大。在某些时候，extra trees的泛化能力比RF更好。</div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>导入数据</div>
+            <pre id="code_block">
+                <span><code>import numpy as np</code></span>
+                <span><code>x = np.linspace(0,5,100).reshape(-1, 1)</code></span>
+                <span><code>y = (x**2+np.random.randn(100,1)).ravel()</code></span>
+                <span><code>from sklearn.model_selection import train_test_split</code></span>
+                <span><code>xtrain,xtest,ytrain,ytest = train_test_split(x,y)</code></span>
+            </pre>
+            <div>开始训练</div>
+            <pre id="code_block">
+                <span><code>from sklearn.model_selection import cross_val_score</code></span>
+                <span><code>from sklearn.ensemble import ExtraTreesRegressor</code></span>
+                <span><code>etr = ExtraTreesRegressor(max_depth=5,bootstrap=True,ccp_alpha=0.5)</code></span>
+                <span><code>etr.fit(xtrain,ytrain)</code></span>
+                <span><code>print('mse',-cross_val_score(etr,xtrain,ytrain,cv=10,scoring='neg_mean_squared_error').mean())</code></span>
+            </pre>
+            <div>结果如下：</div>
+            <div>mse 1.016506085266548</div>
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>import matplotlib.pyplot as plt</code></span>
+                <span><code>plt.xlabel('X')</code></span>
+                <span><code>plt.ylabel('y')</code></span>
+                <span><code>plt.scatter(xtrain,ytrain,c='b',label='train')</code></span>
+                <span><code>plt.scatter(xtest,ytest,c='g',label='test')</code></span>
+                <span><code>d = np.linspace(0,5,100)</code></span>
+                <span><code>plt.plot(d,etr.predict(d.reshape(-1,1)),c='r')</code></span>
+                <span><code>plt.legend()</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/112.png"></div>
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">RandomForest随机森林回归</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <div>Bagging算法</div>
+            <div>Bagging是并行式集成学习方法最著名的代表。它直接基于自助采样法(bootstrap sampling)。给定包含m个样本的数据集，我们先随机取出一个样本放入采样集中，再把该样本放回初始数据集，使得下次采样时该样本仍有可能被选中，这样，经过m轮随机采样，我们得到m个样本的采样集，初始训练集中有的样本在采样集中多次出现，有的则从未出现，约63.2%的样本出现在采样集中，而未出现的约36.8%的样本可用作验证集来对后续的泛化性能进行“包外估计”。</div>
+            <div>照这样，我们可以采样出T个含m个训练样本的采样集，然后基于每个采样集训练出一个基学习器，然后将这些基学习器进行结合。在对预测输出进行结合时，Bagging通常对分类任务使用简单投票法，对回归任务使用简单平均法，这就是Bagging的基本流程。</div>
+            <div><img src="../static/Math/mathematicalModeling/113.png"></div>
+            <div>RandomForest是Bagging的一种</div>
+            <div>主要特点是：</div>
+            <ul type="disc">
+                <li>个体学习器为决策树</li>
+                <li>对训练样本进行采样</li>
+                <li>对属性进行随机采样</li>
+            </ul>
+            <div>从第二点可以看出，由于随机选择了特征值的划分点位，而不是最优点位，这样会导致生成的决策树的规模一般会大于RF所生成的决策树。也就是说，模型的方差相对于RF进一步减少，但是偏差相对于RF进一步增大。在某些时候，extra trees的泛化能力比RF更好。</div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>导入数据</div>
+            <pre id="code_block">
+                <span><code>import numpy as np</code></span>
+                <span><code>x = np.linspace(0,5,100).reshape(-1, 1)</code></span>
+                <span><code>y = (x**2+np.random.randn(100,1)).ravel()</code></span>
+                <span><code>from sklearn.model_selection import train_test_split</code></span>
+                <span><code>xtrain,xtest,ytrain,ytest = train_test_split(x,y)</code></span>
+            </pre>
+            <div>开始训练</div>
+            <pre id="code_block">
+                <span><code>from sklearn.model_selection import cross_val_score</code></span>
+                <span><code>from sklearn.ensemble import RandomForestRegressor</code></span>
+                <span><code>rfr = RandomForestRegressor(max_depth=5)</code></span>
+                <span><code>rfr.fit(xtrain,ytrain)</code></span>
+                <span><code>print('mse',-cross_val_score(rfr,xtrain,ytrain,cv=10,scoring='neg_mean_squared_error').mean())</code></span>
+            </pre>
+            <div>结果如下：</div>
+            <div>mse 1.7358000800837174</div>
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>import matplotlib.pyplot as plt</code></span>
+                <span><code>plt.xlabel('X')</code></span>
+                <span><code>plt.ylabel('y')</code></span>
+                <span><code>plt.scatter(xtrain,ytrain,c='b',label='train')</code></span>
+                <span><code>plt.scatter(xtest,ytest,c='g',label='test')</code></span>
+                <span><code>d = np.linspace(0,5,100)</code></span>
+                <span><code>plt.plot(d,rfr.predict(d.reshape(-1,1)),c='r')</code></span>
+                <span><code>plt.legend()</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/114.png"></div>
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">AdaBoost自适应增强回归</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <div>Boosting算法</div>
+            <div>Boosting是一族可将弱学习器提升为强学习器的算法。它的基本原理：先从初始训练集训练出一个基学习器，再根据基学习器的表现对训练样本分布进行调整，提高被错误分类的样本的权重，降低被正确分类的样本的权重，使得先前基学习器做错的训练样本在后续受到更多的关注，然后基于调整后的样本分布来训练下一个基学习器；如此重复进行，直至基学习器数目达到事先指定的值T，最后将这T个基学习器进行加权结合。</div>
+            <div><img src="../static/Math/mathematicalModeling/115.png"></div>
+            <div>AdaBoost是boosting的一种</div>
+            <div>有以下三个步骤：</div>
+            <ol type="i">
+                <li>首先，是初始化训练数据的权值分布D1。假设有N个训练样本数据，则每一个训练样本最开始时，都被赋予相同的权值：w1=1/N。</li>
+                <li>然后，训练弱分类器hi。具体训练过程中是：如果某个训练样本点，被弱分类器hi准确地分类，那么在构造下一个训练集中，它对应的权值要减小；相反，如果某个训练样本点被错误分类，那么它的权值就应该增大。权值更新过的样本集被用于训练下一个分类器，整个训练过程如此迭代地进行下去。</li>
+                <li>最后，将各个训练得到的弱分类器组合成一个强分类器。各个弱分类器的训练过程结束后，加大分类误差率小的弱分类器的权重，使其在最终的分类函数中起着较大的决定作用，而降低分类误差率大的弱分类器的权重，使其在最终的分类函数中起着较小的决定作用。</li>
+            </ol>
+            <div>换而言之，误差率低的弱分类器在最终分类器中占的权重较大，否则较小。</div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>导入数据</div>
+            <pre id="code_block">
+                <span><code>import numpy as np</code></span>
+                <span><code>x = np.linspace(0,5,100).reshape(-1, 1)</code></span>
+                <span><code>y = (x**2+np.random.randn(100,1)).ravel()</code></span>
+                <span><code>from sklearn.model_selection import train_test_split</code></span>
+                <span><code>xtrain,xtest,ytrain,ytest = train_test_split(x,y)</code></span>
+            </pre>
+            <div>开始训练</div>
+            <pre id="code_block">
+                <span><code>from sklearn.model_selection import cross_val_score</code></span>
+                <span><code>from sklearn.ensemble import AdaBoostRegressor</code></span>
+                <span><code>abr = AdaBoostRegressor()</code></span>
+                <span><code>abr.fit(xtrain,ytrain)</code></span>
+                <span><code>print('mse',-cross_val_score(abr,xtrain,ytrain,cv=10,scoring='neg_mean_squared_error').mean())</code></span>
+            </pre>
+            <div>结果如下：</div>
+            <div>mse 1.8707826549473012</div>
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>import matplotlib.pyplot as plt</code></span>
+                <span><code>plt.xlabel('X')</code></span>
+                <span><code>plt.ylabel('y')</code></span>
+                <span><code>plt.scatter(xtrain,ytrain,c='b',label='train')</code></span>
+                <span><code>plt.scatter(xtest,ytest,c='g',label='test')</code></span>
+                <span><code>d = np.linspace(0,5,100)</code></span>
+                <span><code>plt.plot(d,abr.predict(d.reshape(-1,1)),c='r')</code></span>
+                <span><code>plt.legend()</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/116.png"></div>
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">GBDT梯度提升树回归</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <div>GradientBoost是boosting的一种</div>
+            <div>GradientBoost把所有树的结论累加起来得出最终结论的，其核心在于，每一棵树学的是之前所有树结论之和的残差。比如A的真实年龄是18岁，第一棵树的预测年龄是12岁，差了6岁，即残差为6岁。那么在第二棵树里把A的年龄设为6岁去学习，如果第二棵树真的能把A分到6岁的叶节点，那么累加两棵树的结论就是A的真实年龄；如果第二棵树的结论是5岁，则仍然存在1岁的残差，第三棵树里A的年龄就变成1岁，继续学习。</div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>导入数据</div>
+            <pre id="code_block">
+                <span><code>import numpy as np</code></span>
+                <span><code>x = np.linspace(0,5,100).reshape(-1, 1)</code></span>
+                <span><code>y = (x**2+np.random.randn(100,1)).ravel()</code></span>
+                <span><code>from sklearn.model_selection import train_test_split</code></span>
+                <span><code>xtrain,xtest,ytrain,ytest = train_test_split(x,y)</code></span>
+            </pre>
+            <div>开始训练</div>
+            <pre id="code_block">
+                <span><code>from sklearn.model_selection import cross_val_score</code></span>
+                <span><code>from sklearn.ensemble import GradientBoostingRegressor</code></span>
+                <span><code>gbr = GradientBoostingRegressor()</code></span>
+                <span><code>gbr.fit(xtrain,ytrain)</code></span>
+                <span><code>print('mse',-cross_val_score(gbr,xtrain,ytrain,cv=10,scoring='neg_mean_squared_error').mean())</code></span>
+            </pre>
+            <div>结果如下：</div>
+            <div>mse 1.4216151397411787</div>
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>import matplotlib.pyplot as plt</code></span>
+                <span><code>plt.xlabel('X')</code></span>
+                <span><code>plt.ylabel('y')</code></span>
+                <span><code>plt.scatter(xtrain,ytrain,c='b',label='train')</code></span>
+                <span><code>plt.scatter(xtest,ytest,c='g',label='test')</code></span>
+                <span><code>d = np.linspace(0,5,100)</code></span>
+                <span><code>plt.plot(d,gbr.predict(d.reshape(-1,1)),c='r')</code></span>
+                <span><code>plt.legend()</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/117.png"></div>
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">Bagging装袋回归</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <div>见RandomForest</div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>导入数据</div>
+            <pre id="code_block">
+                <span><code>import numpy as np</code></span>
+                <span><code>x = np.linspace(0,5,100).reshape(-1, 1)</code></span>
+                <span><code>y = (x**2+np.random.randn(100,1)).ravel()</code></span>
+                <span><code>from sklearn.model_selection import train_test_split</code></span>
+                <span><code>xtrain,xtest,ytrain,ytest = train_test_split(x,y)</code></span>
+            </pre>
+            <div>开始训练</div>
+            <pre id="code_block">
+                <span><code>from sklearn.model_selection import cross_val_score</code></span>
+                <span><code>from sklearn.ensemble import BaggingRegressor</code></span>
+                <span><code>br = BaggingRegressor()</code></span>
+                <span><code>br.fit(xtrain,ytrain)</code></span>
+                <span><code>print('mse',-cross_val_score(br,xtrain,ytrain,cv=10,scoring='neg_mean_squared_error').mean())</code></span>
+            </pre>
+            <div>结果如下：</div>
+            <div>mse 1.486465002193159</div>
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>import matplotlib.pyplot as plt</code></span>
+                <span><code>plt.xlabel('X')</code></span>
+                <span><code>plt.ylabel('y')</code></span>
+                <span><code>plt.scatter(xtrain,ytrain,c='b',label='train')</code></span>
+                <span><code>plt.scatter(xtest,ytest,c='g',label='test')</code></span>
+                <span><code>d = np.linspace(0,5,100)</code></span>
+                <span><code>plt.plot(d,br.predict(d.reshape(-1,1)),c='r')</code></span>
+                <span><code>plt.legend()</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/118.png"></div>
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">KNN K近邻分类</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <div>见KNN K近邻回归</div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>导入数据</div>
+            <pre id="code_block">
+                <span><code>import matplotlib.pyplot as plt</code></span>
+                <span><code>import numpy as np</code></span>
+                <span><code>import pandas as pd</code></span>
+                <span><code></code></span>
+                <span><code>def points_within_circle(radius, center=(0, 0), number_of_points=100):</code></span>
+                <span><code>    center_x, center_y = center</code></span>
+                <span><code>    r = radius * np.sqrt(np.random.random((number_of_points,)))</code></span>
+                <span><code>    theta = np.random.random((number_of_points,)) * 2 * np.pi</code></span>
+                <span><code>    x = center_x + r * np.cos(theta)</code></span>
+                <span><code>    y = center_y + r * np.sin(theta)</code></span>
+                <span><code>    return x, y</code></span>
+                <span><code></code></span>
+                <span><code>X = np.arange(0, 8)</code></span>
+                <span><code>point1_x, point1_y = points_within_circle(2, (3, 5), 100)</code></span>
+                <span><code>point2_x, point2_y = points_within_circle(2, (5, 3), 100)</code></span>
+                <span><code>x = np.concatenate((point1_x,point2_x))</code></span>
+                <span><code>y = np.concatenate((point1_y,point2_y))</code></span>
+                <span><code>cls = np.array([0]*100+[1]*100)</code></span>
+                <span><code>df = pd.DataFrame({'x':x,'y':y,'target':cls})</code></span>
+            </pre>
+            <div>开始训练</div>
+            <pre id="code_block">
+                <span><code>from sklearn.neighbors import KNeighborsClassifier</code></span>
+                <span><code>from sklearn.model_selection import cross_val_score</code></span>
+                <span><code>knc = KNeighborsClassifier()</code></span>
+                <span><code>knc.fit(df[['x','y']].values,df['target'].values)</code></span>
+                <span><code>print(cross_val_score(knc,df[['x','y']].values,df['target'].values,cv=5).mean())</code></span>
+            </pre>
+            <div>结果如下：</div>
+            <div>accuracy 0.885</div>
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>def plot_decision_boundary(model, axis):</code></span>
+                <span><code>    x0, x1 = np.meshgrid(</code></span>
+                <span><code>        np.linspace(axis[0], axis[1], int((axis[1] - axis[0]) * 100)).reshape(-1, 1),</code></span>
+                <span><code>        np.linspace(axis[2], axis[3], int((axis[3] - axis[2]) * 100)).reshape(-1, 1),</code></span>
+                <span><code>    )</code></span>
+                <span><code>    X_new = np.c_[x0.ravel(), x1.ravel()]</code></span>
+                <span><code></code></span>
+                <span><code>    y_predict = model.predict(X_new)</code></span>
+                <span><code>    zz = y_predict.reshape(x0.shape)</code></span>
+                <span><code></code></span>
+                <span><code>    from matplotlib.colors import ListedColormap</code></span>
+                <span><code>    custom_cmap = ListedColormap(['#EF9A9A', '#FFF59D', '#90CAF9'])</code></span>
+                <span><code></code></span>
+                <span><code>    plt.contourf(x0, x1, zz, cmap=custom_cmap)</code></span>
+                <span><code></code></span>
+                <span><code>plot_decision_boundary(knc,axis=[1,7,1,8])</code></span>
+                <span><code>plt.scatter(point1_x, point1_y, c="red", label="class 1")</code></span>
+                <span><code>plt.scatter(point2_x, point2_y, c="black", label="class 2")</code></span>
+                <span><code>plt.legend()</code></span>
+                <span><code>plt.grid()</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/119.png"></div>
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">逻辑回归分类</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <div>Logistic 分布是一种连续型的概率分布，其分布函数和密度函数分别为：</div>
+            <div><img src="../static/Math/mathematicalModeling/120.png"></div>
+            <div>在Logistic回归中，我们不像线性回归那样直接将直线拟合到我们的数据。取而代之的是，我们将一条称为Sigmoid的S形曲线拟合到我们的观测结果中。</div>
+            <div><img src="../static/Math/mathematicalModeling/121.png"></div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>导入数据</div>
+            <pre id="code_block">
+                <span><code>import matplotlib.pyplot as plt</code></span>
+                <span><code>import numpy as np</code></span>
+                <span><code>import pandas as pd</code></span>
+                <span><code></code></span>
+                <span><code>def points_within_circle(radius, center=(0, 0), number_of_points=100):</code></span>
+                <span><code>    center_x, center_y = center</code></span>
+                <span><code>    r = radius * np.sqrt(np.random.random((number_of_points,)))</code></span>
+                <span><code>    theta = np.random.random((number_of_points,)) * 2 * np.pi</code></span>
+                <span><code>    x = center_x + r * np.cos(theta)</code></span>
+                <span><code>    y = center_y + r * np.sin(theta)</code></span>
+                <span><code>    return x, y</code></span>
+                <span><code></code></span>
+                <span><code>X = np.arange(0, 8)</code></span>
+                <span><code>point1_x, point1_y = points_within_circle(2, (3, 5), 100)</code></span>
+                <span><code>point2_x, point2_y = points_within_circle(2, (5, 3), 100)</code></span>
+                <span><code>x = np.concatenate((point1_x,point2_x))</code></span>
+                <span><code>y = np.concatenate((point1_y,point2_y))</code></span>
+                <span><code>cls = np.array([0]*100+[1]*100)</code></span>
+                <span><code>df = pd.DataFrame({'x':x,'y':y,'target':cls})</code></span>
+            </pre>
+            <div>开始训练</div>
+            <pre id="code_block">
+                <span><code>from sklearn.neighbors import LogisticRegression</code></span>
+                <span><code>from sklearn.model_selection import cross_val_score</code></span>
+                <span><code>lr = LogisticRegression()</code></span>
+                <span><code>lr.fit(df[['x','y']].values,df['target'].values)</code></span>
+                <span><code>print(rc.coef_)</code></span>
+                <span><code>print(rc.intercept_)</code></span>
+                <span><code>print(cross_val_score(lr,df[['x','y']].values,df['target'].values,cv=5).mean())</code></span>
+            </pre>
+            <div>结果如下：</div>
+            <div>系数 [[ 2.21423171 -2.00793047]]</div>
+            <div>截距 [-1.06286487]</div>
+            <div>accuracy 0.93</div>
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>def plot_decision_boundary(model, axis):</code></span>
+                <span><code>    x0, x1 = np.meshgrid(</code></span>
+                <span><code>        np.linspace(axis[0], axis[1], int((axis[1] - axis[0]) * 100)).reshape(-1, 1),</code></span>
+                <span><code>        np.linspace(axis[2], axis[3], int((axis[3] - axis[2]) * 100)).reshape(-1, 1),</code></span>
+                <span><code>    )</code></span>
+                <span><code>    X_new = np.c_[x0.ravel(), x1.ravel()]</code></span>
+                <span><code></code></span>
+                <span><code>    y_predict = model.predict(X_new)</code></span>
+                <span><code>    zz = y_predict.reshape(x0.shape)</code></span>
+                <span><code></code></span>
+                <span><code>    from matplotlib.colors import ListedColormap</code></span>
+                <span><code>    custom_cmap = ListedColormap(['#EF9A9A', '#FFF59D', '#90CAF9'])</code></span>
+                <span><code></code></span>
+                <span><code>    plt.contourf(x0, x1, zz, cmap=custom_cmap)</code></span>
+                <span><code></code></span>
+                <span><code>plot_decision_boundary(lr,axis=[1,7,1,8])</code></span>
+                <span><code>plt.scatter(point1_x, point1_y, c="red", label="class 1")</code></span>
+                <span><code>plt.scatter(point2_x, point2_y, c="black", label="class 2")</code></span>
+                <span><code>plt.legend()</code></span>
+                <span><code>plt.grid()</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/122.png"></div>
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">Ridge岭回归分类</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <div>见Ridge岭回归</div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>导入数据</div>
+            <pre id="code_block">
+                <span><code>import matplotlib.pyplot as plt</code></span>
+                <span><code>import numpy as np</code></span>
+                <span><code>import pandas as pd</code></span>
+                <span><code></code></span>
+                <span><code>def points_within_circle(radius, center=(0, 0), number_of_points=100):</code></span>
+                <span><code>    center_x, center_y = center</code></span>
+                <span><code>    r = radius * np.sqrt(np.random.random((number_of_points,)))</code></span>
+                <span><code>    theta = np.random.random((number_of_points,)) * 2 * np.pi</code></span>
+                <span><code>    x = center_x + r * np.cos(theta)</code></span>
+                <span><code>    y = center_y + r * np.sin(theta)</code></span>
+                <span><code>    return x, y</code></span>
+                <span><code></code></span>
+                <span><code>X = np.arange(0, 8)</code></span>
+                <span><code>point1_x, point1_y = points_within_circle(2, (3, 5), 100)</code></span>
+                <span><code>point2_x, point2_y = points_within_circle(2, (5, 3), 100)</code></span>
+                <span><code>x = np.concatenate((point1_x,point2_x))</code></span>
+                <span><code>y = np.concatenate((point1_y,point2_y))</code></span>
+                <span><code>cls = np.array([0]*100+[1]*100)</code></span>
+                <span><code>df = pd.DataFrame({'x':x,'y':y,'target':cls})</code></span>
+            </pre>
+            <div>开始训练</div>
+            <pre id="code_block">
+                <span><code>from sklearn.neighbors import RidgeClassifier</code></span>
+                <span><code>from sklearn.model_selection import cross_val_score</code></span>
+                <span><code>rc = RidgeClassifier()</code></span>
+                <span><code>rc.fit(df[['x','y']].values,df['target'].values)</code></span>
+                <span><code>print(rc.coef_)</code></span>
+                <span><code>print(rc.intercept_)</code></span>
+                <span><code>print(cross_val_score(rc,df[['x','y']].values,df['target'].values,cv=5).mean())</code></span>
+            </pre>
+            <div>结果如下：</div>
+            <div>系数 [[ 0.35855341 -0.31699953]]</div>
+            <div>截距 [-0.16783206]</div>
+            <div>accuracy 0.93</div>
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>def plot_decision_boundary(model, axis):</code></span>
+                <span><code>    x0, x1 = np.meshgrid(</code></span>
+                <span><code>        np.linspace(axis[0], axis[1], int((axis[1] - axis[0]) * 100)).reshape(-1, 1),</code></span>
+                <span><code>        np.linspace(axis[2], axis[3], int((axis[3] - axis[2]) * 100)).reshape(-1, 1),</code></span>
+                <span><code>    )</code></span>
+                <span><code>    X_new = np.c_[x0.ravel(), x1.ravel()]</code></span>
+                <span><code></code></span>
+                <span><code>    y_predict = model.predict(X_new)</code></span>
+                <span><code>    zz = y_predict.reshape(x0.shape)</code></span>
+                <span><code></code></span>
+                <span><code>    from matplotlib.colors import ListedColormap</code></span>
+                <span><code>    custom_cmap = ListedColormap(['#EF9A9A', '#FFF59D', '#90CAF9'])</code></span>
+                <span><code></code></span>
+                <span><code>    plt.contourf(x0, x1, zz, cmap=custom_cmap)</code></span>
+                <span><code></code></span>
+                <span><code>plot_decision_boundary(rc,axis=[1,7,1,8])</code></span>
+                <span><code>plt.scatter(point1_x, point1_y, c="red", label="class 1")</code></span>
+                <span><code>plt.scatter(point2_x, point2_y, c="black", label="class 2")</code></span>
+                <span><code>plt.legend()</code></span>
+                <span><code>plt.grid()</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/123.png"></div>
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">RandomForest随机森林分类</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <div>见RandomForest随机森林回归</div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>导入数据</div>
+            <pre id="code_block">
+                <span><code>import matplotlib.pyplot as plt</code></span>
+                <span><code>import numpy as np</code></span>
+                <span><code>import pandas as pd</code></span>
+                <span><code></code></span>
+                <span><code>def points_within_circle(radius, center=(0, 0), number_of_points=100):</code></span>
+                <span><code>    center_x, center_y = center</code></span>
+                <span><code>    r = radius * np.sqrt(np.random.random((number_of_points,)))</code></span>
+                <span><code>    theta = np.random.random((number_of_points,)) * 2 * np.pi</code></span>
+                <span><code>    x = center_x + r * np.cos(theta)</code></span>
+                <span><code>    y = center_y + r * np.sin(theta)</code></span>
+                <span><code>    return x, y</code></span>
+                <span><code></code></span>
+                <span><code>X = np.arange(0, 8)</code></span>
+                <span><code>point1_x, point1_y = points_within_circle(2, (3, 5), 100)</code></span>
+                <span><code>point2_x, point2_y = points_within_circle(2, (5, 3), 100)</code></span>
+                <span><code>x = np.concatenate((point1_x,point2_x))</code></span>
+                <span><code>y = np.concatenate((point1_y,point2_y))</code></span>
+                <span><code>cls = np.array([0]*100+[1]*100)</code></span>
+                <span><code>df = pd.DataFrame({'x':x,'y':y,'target':cls})</code></span>
+            </pre>
+            <div>开始训练</div>
+            <pre id="code_block">
+                <span><code>from sklearn.ensemble import RandomForestClassifier</code></span>
+                <span><code>from sklearn.model_selection import cross_val_score</code></span>
+                <span><code>rfc = RandomForestClassifier()</code></span>
+                <span><code>rfc.fit(df[['x','y']].values,df['target'].values)</code></span>
+                <span><code>print(cross_val_score(rfc,df[['x','y']].values,df['target'].values,cv=5).mean())</code></span>
+            </pre>
+            <div>结果如下：</div>
+            <div>accuracy 0.905</div>
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>def plot_decision_boundary(model, axis):</code></span>
+                <span><code>    x0, x1 = np.meshgrid(</code></span>
+                <span><code>        np.linspace(axis[0], axis[1], int((axis[1] - axis[0]) * 100)).reshape(-1, 1),</code></span>
+                <span><code>        np.linspace(axis[2], axis[3], int((axis[3] - axis[2]) * 100)).reshape(-1, 1),</code></span>
+                <span><code>    )</code></span>
+                <span><code>    X_new = np.c_[x0.ravel(), x1.ravel()]</code></span>
+                <span><code></code></span>
+                <span><code>    y_predict = model.predict(X_new)</code></span>
+                <span><code>    zz = y_predict.reshape(x0.shape)</code></span>
+                <span><code></code></span>
+                <span><code>    from matplotlib.colors import ListedColormap</code></span>
+                <span><code>    custom_cmap = ListedColormap(['#EF9A9A', '#FFF59D', '#90CAF9'])</code></span>
+                <span><code></code></span>
+                <span><code>    plt.contourf(x0, x1, zz, cmap=custom_cmap)</code></span>
+                <span><code></code></span>
+                <span><code>plot_decision_boundary(rfc,axis=[1,7,1,8])</code></span>
+                <span><code>plt.scatter(point1_x, point1_y, c="red", label="class 1")</code></span>
+                <span><code>plt.scatter(point2_x, point2_y, c="black", label="class 2")</code></span>
+                <span><code>plt.legend()</code></span>
+                <span><code>plt.grid()</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/124.png"></div>
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">DecisionTree决策树分类</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <div>见DecisionTree决策树回归</div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>导入数据</div>
+            <pre id="code_block">
+                <span><code>import matplotlib.pyplot as plt</code></span>
+                <span><code>import numpy as np</code></span>
+                <span><code>import pandas as pd</code></span>
+                <span><code></code></span>
+                <span><code>def points_within_circle(radius, center=(0, 0), number_of_points=100):</code></span>
+                <span><code>    center_x, center_y = center</code></span>
+                <span><code>    r = radius * np.sqrt(np.random.random((number_of_points,)))</code></span>
+                <span><code>    theta = np.random.random((number_of_points,)) * 2 * np.pi</code></span>
+                <span><code>    x = center_x + r * np.cos(theta)</code></span>
+                <span><code>    y = center_y + r * np.sin(theta)</code></span>
+                <span><code>    return x, y</code></span>
+                <span><code></code></span>
+                <span><code>X = np.arange(0, 8)</code></span>
+                <span><code>point1_x, point1_y = points_within_circle(2, (3, 5), 100)</code></span>
+                <span><code>point2_x, point2_y = points_within_circle(2, (5, 3), 100)</code></span>
+                <span><code>x = np.concatenate((point1_x,point2_x))</code></span>
+                <span><code>y = np.concatenate((point1_y,point2_y))</code></span>
+                <span><code>cls = np.array([0]*100+[1]*100)</code></span>
+                <span><code>df = pd.DataFrame({'x':x,'y':y,'target':cls})</code></span>
+            </pre>
+            <div>开始训练</div>
+            <pre id="code_block">
+                <span><code>from sklearn.tree import DecisionTreeClassifier</code></span>
+                <span><code>from sklearn.model_selection import cross_val_score</code></span>
+                <span><code>dtc = DecisionTreeClassifier()</code></span>
+                <span><code>dtc.fit(df[['x','y']].values,df['target'].values)</code></span>
+                <span><code>print(cross_val_score(dtc,df[['x','y']].values,df['target'].values,cv=5).mean())</code></span>
+            </pre>
+            <div>结果如下：</div>
+            <div>accuracy 0.8549999999999999</div>
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>def plot_decision_boundary(model, axis):</code></span>
+                <span><code>    x0, x1 = np.meshgrid(</code></span>
+                <span><code>        np.linspace(axis[0], axis[1], int((axis[1] - axis[0]) * 100)).reshape(-1, 1),</code></span>
+                <span><code>        np.linspace(axis[2], axis[3], int((axis[3] - axis[2]) * 100)).reshape(-1, 1),</code></span>
+                <span><code>    )</code></span>
+                <span><code>    X_new = np.c_[x0.ravel(), x1.ravel()]</code></span>
+                <span><code></code></span>
+                <span><code>    y_predict = model.predict(X_new)</code></span>
+                <span><code>    zz = y_predict.reshape(x0.shape)</code></span>
+                <span><code></code></span>
+                <span><code>    from matplotlib.colors import ListedColormap</code></span>
+                <span><code>    custom_cmap = ListedColormap(['#EF9A9A', '#FFF59D', '#90CAF9'])</code></span>
+                <span><code></code></span>
+                <span><code>    plt.contourf(x0, x1, zz, cmap=custom_cmap)</code></span>
+                <span><code></code></span>
+                <span><code>plot_decision_boundary(dtc,axis=[1,7,1,8])</code></span>
+                <span><code>plt.scatter(point1_x, point1_y, c="red", label="class 1")</code></span>
+                <span><code>plt.scatter(point2_x, point2_y, c="black", label="class 2")</code></span>
+                <span><code>plt.legend()</code></span>
+                <span><code>plt.grid()</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/125.png"></div>
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">ExtraTrees极端随机树分类</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <div>见ExtraTrees极端随机树回归</div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>导入数据</div>
+            <pre id="code_block">
+                <span><code>import matplotlib.pyplot as plt</code></span>
+                <span><code>import numpy as np</code></span>
+                <span><code>import pandas as pd</code></span>
+                <span><code></code></span>
+                <span><code>def points_within_circle(radius, center=(0, 0), number_of_points=100):</code></span>
+                <span><code>    center_x, center_y = center</code></span>
+                <span><code>    r = radius * np.sqrt(np.random.random((number_of_points,)))</code></span>
+                <span><code>    theta = np.random.random((number_of_points,)) * 2 * np.pi</code></span>
+                <span><code>    x = center_x + r * np.cos(theta)</code></span>
+                <span><code>    y = center_y + r * np.sin(theta)</code></span>
+                <span><code>    return x, y</code></span>
+                <span><code></code></span>
+                <span><code>X = np.arange(0, 8)</code></span>
+                <span><code>point1_x, point1_y = points_within_circle(2, (3, 5), 100)</code></span>
+                <span><code>point2_x, point2_y = points_within_circle(2, (5, 3), 100)</code></span>
+                <span><code>x = np.concatenate((point1_x,point2_x))</code></span>
+                <span><code>y = np.concatenate((point1_y,point2_y))</code></span>
+                <span><code>cls = np.array([0]*100+[1]*100)</code></span>
+                <span><code>df = pd.DataFrame({'x':x,'y':y,'target':cls})</code></span>
+            </pre>
+            <div>开始训练</div>
+            <pre id="code_block">
+                <span><code>from sklearn.ensemble import ExtraTreesClassifier</code></span>
+                <span><code>from sklearn.model_selection import cross_val_score</code></span>
+                <span><code>etc = ExtraTreesClassifier()</code></span>
+                <span><code>etc.fit(df[['x','y']].values,df['target'].values)</code></span>
+                <span><code>print(cross_val_score(etc,df[['x','y']].values,df['target'].values,cv=5).mean())</code></span>
+            </pre>
+            <div>结果如下：</div>
+            <div>accuracy 0.925</div>
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>def plot_decision_boundary(model, axis):</code></span>
+                <span><code>    x0, x1 = np.meshgrid(</code></span>
+                <span><code>        np.linspace(axis[0], axis[1], int((axis[1] - axis[0]) * 100)).reshape(-1, 1),</code></span>
+                <span><code>        np.linspace(axis[2], axis[3], int((axis[3] - axis[2]) * 100)).reshape(-1, 1),</code></span>
+                <span><code>    )</code></span>
+                <span><code>    X_new = np.c_[x0.ravel(), x1.ravel()]</code></span>
+                <span><code></code></span>
+                <span><code>    y_predict = model.predict(X_new)</code></span>
+                <span><code>    zz = y_predict.reshape(x0.shape)</code></span>
+                <span><code></code></span>
+                <span><code>    from matplotlib.colors import ListedColormap</code></span>
+                <span><code>    custom_cmap = ListedColormap(['#EF9A9A', '#FFF59D', '#90CAF9'])</code></span>
+                <span><code></code></span>
+                <span><code>    plt.contourf(x0, x1, zz, cmap=custom_cmap)</code></span>
+                <span><code></code></span>
+                <span><code>plot_decision_boundary(etc,axis=[1,7,1,8])</code></span>
+                <span><code>plt.scatter(point1_x, point1_y, c="red", label="class 1")</code></span>
+                <span><code>plt.scatter(point2_x, point2_y, c="black", label="class 2")</code></span>
+                <span><code>plt.legend()</code></span>
+                <span><code>plt.grid()</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/126.png"></div>
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">GBDT梯度提升树分类</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <div>见GBDT梯度提升回归</div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>导入数据</div>
+            <pre id="code_block">
+                <span><code>import matplotlib.pyplot as plt</code></span>
+                <span><code>import numpy as np</code></span>
+                <span><code>import pandas as pd</code></span>
+                <span><code></code></span>
+                <span><code>def points_within_circle(radius, center=(0, 0), number_of_points=100):</code></span>
+                <span><code>    center_x, center_y = center</code></span>
+                <span><code>    r = radius * np.sqrt(np.random.random((number_of_points,)))</code></span>
+                <span><code>    theta = np.random.random((number_of_points,)) * 2 * np.pi</code></span>
+                <span><code>    x = center_x + r * np.cos(theta)</code></span>
+                <span><code>    y = center_y + r * np.sin(theta)</code></span>
+                <span><code>    return x, y</code></span>
+                <span><code></code></span>
+                <span><code>X = np.arange(0, 8)</code></span>
+                <span><code>point1_x, point1_y = points_within_circle(2, (3, 5), 100)</code></span>
+                <span><code>point2_x, point2_y = points_within_circle(2, (5, 3), 100)</code></span>
+                <span><code>x = np.concatenate((point1_x,point2_x))</code></span>
+                <span><code>y = np.concatenate((point1_y,point2_y))</code></span>
+                <span><code>cls = np.array([0]*100+[1]*100)</code></span>
+                <span><code>df = pd.DataFrame({'x':x,'y':y,'target':cls})</code></span>
+            </pre>
+            <div>开始训练</div>
+            <pre id="code_block">
+                <span><code>from sklearn.ensemble import GradientBoostingClassifier</code></span>
+                <span><code>from sklearn.model_selection import cross_val_score</code></span>
+                <span><code>gbc = GradientBoostingClassifier()</code></span>
+                <span><code>gbc.fit(df[['x','y']].values,df['target'].values)</code></span>
+                <span><code>print(cross_val_score(gbc,df[['x','y']].values,df['target'].values,cv=5).mean())</code></span>
+            </pre>
+            <div>结果如下：</div>
+            <div>accuracy 0.915</div>
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>def plot_decision_boundary(model, axis):</code></span>
+                <span><code>    x0, x1 = np.meshgrid(</code></span>
+                <span><code>        np.linspace(axis[0], axis[1], int((axis[1] - axis[0]) * 100)).reshape(-1, 1),</code></span>
+                <span><code>        np.linspace(axis[2], axis[3], int((axis[3] - axis[2]) * 100)).reshape(-1, 1),</code></span>
+                <span><code>    )</code></span>
+                <span><code>    X_new = np.c_[x0.ravel(), x1.ravel()]</code></span>
+                <span><code></code></span>
+                <span><code>    y_predict = model.predict(X_new)</code></span>
+                <span><code>    zz = y_predict.reshape(x0.shape)</code></span>
+                <span><code></code></span>
+                <span><code>    from matplotlib.colors import ListedColormap</code></span>
+                <span><code>    custom_cmap = ListedColormap(['#EF9A9A', '#FFF59D', '#90CAF9'])</code></span>
+                <span><code></code></span>
+                <span><code>    plt.contourf(x0, x1, zz, cmap=custom_cmap)</code></span>
+                <span><code></code></span>
+                <span><code>plot_decision_boundary(gbc,axis=[1,7,1,8])</code></span>
+                <span><code>plt.scatter(point1_x, point1_y, c="red", label="class 1")</code></span>
+                <span><code>plt.scatter(point2_x, point2_y, c="black", label="class 2")</code></span>
+                <span><code>plt.legend()</code></span>
+                <span><code>plt.grid()</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/127.png"></div>
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">AdaBoost自适应增强分类</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <div>见AdaBoost自适应增强回归</div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>导入数据</div>
+            <pre id="code_block">
+                <span><code>import matplotlib.pyplot as plt</code></span>
+                <span><code>import numpy as np</code></span>
+                <span><code>import pandas as pd</code></span>
+                <span><code></code></span>
+                <span><code>def points_within_circle(radius, center=(0, 0), number_of_points=100):</code></span>
+                <span><code>    center_x, center_y = center</code></span>
+                <span><code>    r = radius * np.sqrt(np.random.random((number_of_points,)))</code></span>
+                <span><code>    theta = np.random.random((number_of_points,)) * 2 * np.pi</code></span>
+                <span><code>    x = center_x + r * np.cos(theta)</code></span>
+                <span><code>    y = center_y + r * np.sin(theta)</code></span>
+                <span><code>    return x, y</code></span>
+                <span><code></code></span>
+                <span><code>X = np.arange(0, 8)</code></span>
+                <span><code>point1_x, point1_y = points_within_circle(2, (3, 5), 100)</code></span>
+                <span><code>point2_x, point2_y = points_within_circle(2, (5, 3), 100)</code></span>
+                <span><code>x = np.concatenate((point1_x,point2_x))</code></span>
+                <span><code>y = np.concatenate((point1_y,point2_y))</code></span>
+                <span><code>cls = np.array([0]*100+[1]*100)</code></span>
+                <span><code>df = pd.DataFrame({'x':x,'y':y,'target':cls})</code></span>
+            </pre>
+            <div>开始训练</div>
+            <pre id="code_block">
+                <span><code>from sklearn.ensemble import AdaBoostClassifier</code></span>
+                <span><code>from sklearn.model_selection import cross_val_score</code></span>
+                <span><code>abc = AdaBoostClassifier()</code></span>
+                <span><code>abc.fit(df[['x','y']].values,df['target'].values)</code></span>
+                <span><code>print(cross_val_score(abc,df[['x','y']].values,df['target'].values,cv=5).mean())</code></span>
+            </pre>
+            <div>结果如下：</div>
+            <div>accuracy 0.8800000000000001</div>
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>def plot_decision_boundary(model, axis):</code></span>
+                <span><code>    x0, x1 = np.meshgrid(</code></span>
+                <span><code>        np.linspace(axis[0], axis[1], int((axis[1] - axis[0]) * 100)).reshape(-1, 1),</code></span>
+                <span><code>        np.linspace(axis[2], axis[3], int((axis[3] - axis[2]) * 100)).reshape(-1, 1),</code></span>
+                <span><code>    )</code></span>
+                <span><code>    X_new = np.c_[x0.ravel(), x1.ravel()]</code></span>
+                <span><code></code></span>
+                <span><code>    y_predict = model.predict(X_new)</code></span>
+                <span><code>    zz = y_predict.reshape(x0.shape)</code></span>
+                <span><code></code></span>
+                <span><code>    from matplotlib.colors import ListedColormap</code></span>
+                <span><code>    custom_cmap = ListedColormap(['#EF9A9A', '#FFF59D', '#90CAF9'])</code></span>
+                <span><code></code></span>
+                <span><code>    plt.contourf(x0, x1, zz, cmap=custom_cmap)</code></span>
+                <span><code></code></span>
+                <span><code>plot_decision_boundary(abc,axis=[1,7,1,8])</code></span>
+                <span><code>plt.scatter(point1_x, point1_y, c="red", label="class 1")</code></span>
+                <span><code>plt.scatter(point2_x, point2_y, c="black", label="class 2")</code></span>
+                <span><code>plt.legend()</code></span>
+                <span><code>plt.grid()</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/128.png"></div>
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">SVC支持向量机分类</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <div>见SVR支持向量机回归</div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>导入数据</div>
+            <pre id="code_block">
+                <span><code>import matplotlib.pyplot as plt</code></span>
+                <span><code>import numpy as np</code></span>
+                <span><code>import pandas as pd</code></span>
+                <span><code></code></span>
+                <span><code>def points_within_circle(radius, center=(0, 0), number_of_points=100):</code></span>
+                <span><code>    center_x, center_y = center</code></span>
+                <span><code>    r = radius * np.sqrt(np.random.random((number_of_points,)))</code></span>
+                <span><code>    theta = np.random.random((number_of_points,)) * 2 * np.pi</code></span>
+                <span><code>    x = center_x + r * np.cos(theta)</code></span>
+                <span><code>    y = center_y + r * np.sin(theta)</code></span>
+                <span><code>    return x, y</code></span>
+                <span><code></code></span>
+                <span><code>X = np.arange(0, 8)</code></span>
+                <span><code>point1_x, point1_y = points_within_circle(2, (3, 5), 100)</code></span>
+                <span><code>point2_x, point2_y = points_within_circle(2, (5, 3), 100)</code></span>
+                <span><code>x = np.concatenate((point1_x,point2_x))</code></span>
+                <span><code>y = np.concatenate((point1_y,point2_y))</code></span>
+                <span><code>cls = np.array([0]*100+[1]*100)</code></span>
+                <span><code>df = pd.DataFrame({'x':x,'y':y,'target':cls})</code></span>
+            </pre>
+            <div>开始训练</div>
+            <pre id="code_block">
+                <span><code>from sklearn.SVR import SVR</code></span>
+                <span><code>from sklearn.model_selection import cross_val_score</code></span>
+                <span><code>svr = SVR()</code></span>
+                <span><code>svr.fit(df[['x','y']].values,df['target'].values)</code></span>
+                <span><code>print(cross_val_score(svr,df[['x','y']].values,df['target'].values,cv=5).mean())</code></span>
+            </pre>
+            <div>结果如下：</div>
+            <div>accuracy 0.1275525062237303</div>
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>def plot_decision_boundary(model, axis):</code></span>
+                <span><code>    x0, x1 = np.meshgrid(</code></span>
+                <span><code>        np.linspace(axis[0], axis[1], int((axis[1] - axis[0]) * 100)).reshape(-1, 1),</code></span>
+                <span><code>        np.linspace(axis[2], axis[3], int((axis[3] - axis[2]) * 100)).reshape(-1, 1),</code></span>
+                <span><code>    )</code></span>
+                <span><code>    X_new = np.c_[x0.ravel(), x1.ravel()]</code></span>
+                <span><code></code></span>
+                <span><code>    y_predict = model.predict(X_new)</code></span>
+                <span><code>    zz = y_predict.reshape(x0.shape)</code></span>
+                <span><code></code></span>
+                <span><code>    from matplotlib.colors import ListedColormap</code></span>
+                <span><code>    custom_cmap = ListedColormap(['#EF9A9A', '#FFF59D', '#90CAF9'])</code></span>
+                <span><code></code></span>
+                <span><code>    plt.contourf(x0, x1, zz, cmap=custom_cmap)</code></span>
+                <span><code></code></span>
+                <span><code>plot_decision_boundary(svr,axis=[1,7,1,8])</code></span>
+                <span><code>plt.scatter(point1_x, point1_y, c="red", label="class 1")</code></span>
+                <span><code>plt.scatter(point2_x, point2_y, c="black", label="class 2")</code></span>
+                <span><code>plt.legend()</code></span>
+                <span><code>plt.grid()</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/129.png"></div>
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">MLP多层感知机分类</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <div>见MLP多层感知机回归</div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>导入数据</div>
+            <pre id="code_block">
+                <span><code>import matplotlib.pyplot as plt</code></span>
+                <span><code>import numpy as np</code></span>
+                <span><code>import pandas as pd</code></span>
+                <span><code></code></span>
+                <span><code>def points_within_circle(radius, center=(0, 0), number_of_points=100):</code></span>
+                <span><code>    center_x, center_y = center</code></span>
+                <span><code>    r = radius * np.sqrt(np.random.random((number_of_points,)))</code></span>
+                <span><code>    theta = np.random.random((number_of_points,)) * 2 * np.pi</code></span>
+                <span><code>    x = center_x + r * np.cos(theta)</code></span>
+                <span><code>    y = center_y + r * np.sin(theta)</code></span>
+                <span><code>    return x, y</code></span>
+                <span><code></code></span>
+                <span><code>X = np.arange(0, 8)</code></span>
+                <span><code>point1_x, point1_y = points_within_circle(2, (3, 5), 100)</code></span>
+                <span><code>point2_x, point2_y = points_within_circle(2, (5, 3), 100)</code></span>
+                <span><code>x = np.concatenate((point1_x,point2_x))</code></span>
+                <span><code>y = np.concatenate((point1_y,point2_y))</code></span>
+                <span><code>cls = np.array([0]*100+[1]*100)</code></span>
+                <span><code>df = pd.DataFrame({'x':x,'y':y,'target':cls})</code></span>
+            </pre>
+            <div>开始训练</div>
+            <pre id="code_block">
+                <span><code>from sklearn.neural_network import MLPClassifier</code></span>
+                <span><code>from sklearn.model_selection import cross_val_score</code></span>
+                <span><code>mlpc = MLPClassifier(max_iter=2000)</code></span>
+                <span><code>mlpc.fit(df[['x','y']].values,df['target'].values)</code></span>
+                <span><code>print(cross_val_score(mlpc,df[['x','y']].values,df['target'].values,cv=5).mean())</code></span>
+            </pre>
+            <div>结果如下：</div>
+            <div>accuracy 0.915</div>
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>def plot_decision_boundary(model, axis):</code></span>
+                <span><code>    x0, x1 = np.meshgrid(</code></span>
+                <span><code>        np.linspace(axis[0], axis[1], int((axis[1] - axis[0]) * 100)).reshape(-1, 1),</code></span>
+                <span><code>        np.linspace(axis[2], axis[3], int((axis[3] - axis[2]) * 100)).reshape(-1, 1),</code></span>
+                <span><code>    )</code></span>
+                <span><code>    X_new = np.c_[x0.ravel(), x1.ravel()]</code></span>
+                <span><code></code></span>
+                <span><code>    y_predict = model.predict(X_new)</code></span>
+                <span><code>    zz = y_predict.reshape(x0.shape)</code></span>
+                <span><code></code></span>
+                <span><code>    from matplotlib.colors import ListedColormap</code></span>
+                <span><code>    custom_cmap = ListedColormap(['#EF9A9A', '#FFF59D', '#90CAF9'])</code></span>
+                <span><code></code></span>
+                <span><code>    plt.contourf(x0, x1, zz, cmap=custom_cmap)</code></span>
+                <span><code></code></span>
+                <span><code>plot_decision_boundary(mlpc,axis=[1,7,1,8])</code></span>
+                <span><code>plt.scatter(point1_x, point1_y, c="red", label="class 1")</code></span>
+                <span><code>plt.scatter(point2_x, point2_y, c="black", label="class 2")</code></span>
+                <span><code>plt.legend()</code></span>
+                <span><code>plt.grid()</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/130.png"></div>
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">Bagging装袋分类</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <div>见Bagging装袋回归</div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>导入数据</div>
+            <pre id="code_block">
+                <span><code>import matplotlib.pyplot as plt</code></span>
+                <span><code>import numpy as np</code></span>
+                <span><code>import pandas as pd</code></span>
+                <span><code></code></span>
+                <span><code>def points_within_circle(radius, center=(0, 0), number_of_points=100):</code></span>
+                <span><code>    center_x, center_y = center</code></span>
+                <span><code>    r = radius * np.sqrt(np.random.random((number_of_points,)))</code></span>
+                <span><code>    theta = np.random.random((number_of_points,)) * 2 * np.pi</code></span>
+                <span><code>    x = center_x + r * np.cos(theta)</code></span>
+                <span><code>    y = center_y + r * np.sin(theta)</code></span>
+                <span><code>    return x, y</code></span>
+                <span><code></code></span>
+                <span><code>X = np.arange(0, 8)</code></span>
+                <span><code>point1_x, point1_y = points_within_circle(2, (3, 5), 100)</code></span>
+                <span><code>point2_x, point2_y = points_within_circle(2, (5, 3), 100)</code></span>
+                <span><code>x = np.concatenate((point1_x,point2_x))</code></span>
+                <span><code>y = np.concatenate((point1_y,point2_y))</code></span>
+                <span><code>cls = np.array([0]*100+[1]*100)</code></span>
+                <span><code>df = pd.DataFrame({'x':x,'y':y,'target':cls})</code></span>
+            </pre>
+            <div>开始训练</div>
+            <pre id="code_block">
+                <span><code>from sklearn.ensemble import BaggingClassifier</code></span>
+                <span><code>from sklearn.model_selection import cross_val_score</code></span>
+                <span><code>bc = BaggingClassifier()</code></span>
+                <span><code>bc.fit(df[['x','y']].values,df['target'].values)</code></span>
+                <span><code>print(cross_val_score(bc,df[['x','y']].values,df['target'].values,cv=5).mean())</code></span>
+            </pre>
+            <div>结果如下：</div>
+            <div>accuracy 0.885</div>
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>def plot_decision_boundary(model, axis):</code></span>
+                <span><code>    x0, x1 = np.meshgrid(</code></span>
+                <span><code>        np.linspace(axis[0], axis[1], int((axis[1] - axis[0]) * 100)).reshape(-1, 1),</code></span>
+                <span><code>        np.linspace(axis[2], axis[3], int((axis[3] - axis[2]) * 100)).reshape(-1, 1),</code></span>
+                <span><code>    )</code></span>
+                <span><code>    X_new = np.c_[x0.ravel(), x1.ravel()]</code></span>
+                <span><code></code></span>
+                <span><code>    y_predict = model.predict(X_new)</code></span>
+                <span><code>    zz = y_predict.reshape(x0.shape)</code></span>
+                <span><code></code></span>
+                <span><code>    from matplotlib.colors import ListedColormap</code></span>
+                <span><code>    custom_cmap = ListedColormap(['#EF9A9A', '#FFF59D', '#90CAF9'])</code></span>
+                <span><code></code></span>
+                <span><code>    plt.contourf(x0, x1, zz, cmap=custom_cmap)</code></span>
+                <span><code></code></span>
+                <span><code>plot_decision_boundary(bc,axis=[1,7,1,8])</code></span>
+                <span><code>plt.scatter(point1_x, point1_y, c="red", label="class 1")</code></span>
+                <span><code>plt.scatter(point2_x, point2_y, c="black", label="class 2")</code></span>
+                <span><code>plt.legend()</code></span>
+                <span><code>plt.grid()</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/131.png"></div>
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">朴素贝叶斯分类</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <div>Naive Bayes算法</div>
+            <div><img src="../static/Math/mathematicalModeling/132.png"></div>
+            <div>GaussianNB、MultinomialNB、BernoulliNB，分别是高斯朴素贝叶斯、多项式分布朴素贝叶斯和伯努利朴素贝叶斯。多项式分布是将重复词语是为其重复多次，伯努利朴素贝叶斯是将重复的词语视为其只出现1次</div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>导入数据</div>
+            <pre id="code_block">
+                <span><code>import matplotlib.pyplot as plt</code></span>
+                <span><code>import numpy as np</code></span>
+                <span><code>import pandas as pd</code></span>
+                <span><code></code></span>
+                <span><code>def points_within_circle(radius, center=(0, 0), number_of_points=100):</code></span>
+                <span><code>    center_x, center_y = center</code></span>
+                <span><code>    r = radius * np.sqrt(np.random.random((number_of_points,)))</code></span>
+                <span><code>    theta = np.random.random((number_of_points,)) * 2 * np.pi</code></span>
+                <span><code>    x = center_x + r * np.cos(theta)</code></span>
+                <span><code>    y = center_y + r * np.sin(theta)</code></span>
+                <span><code>    return x, y</code></span>
+                <span><code></code></span>
+                <span><code>X = np.arange(0, 8)</code></span>
+                <span><code>point1_x, point1_y = points_within_circle(2, (3, 5), 100)</code></span>
+                <span><code>point2_x, point2_y = points_within_circle(2, (5, 3), 100)</code></span>
+                <span><code>x = np.concatenate((point1_x,point2_x))</code></span>
+                <span><code>y = np.concatenate((point1_y,point2_y))</code></span>
+                <span><code>cls = np.array([0]*100+[1]*100)</code></span>
+                <span><code>df = pd.DataFrame({'x':x,'y':y,'target':cls})</code></span>
+            </pre>
+            <div>开始训练</div>
+            <pre id="code_block">
+                <span><code>from sklearn.naive_bayes import GaussianNB</code></span>
+                <span><code>from sklearn.model_selection import cross_val_score</code></span>
+                <span><code>bayes = GaussianNB()</code></span>
+                <span><code>bayes.fit(df[['x','y']].values,df['target'].values)</code></span>
+                <span><code>print(cross_val_score(bayes,df[['x','y']].values,df['target'].values,cv=5).mean())</code></span>
+            </pre>
+            <div>结果如下：</div>
+            <div>Gaussian 0.9100000000000001</div>
+            <div>Bernoulli 0.5</div>
+            <div>Multinomial 0.9099999999999999</div>
+            <div>Complement 0.8800000000000001</div>
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>def plot_decision_boundary(model, axis):</code></span>
+                <span><code>    x0, x1 = np.meshgrid(</code></span>
+                <span><code>        np.linspace(axis[0], axis[1], int((axis[1] - axis[0]) * 100)).reshape(-1, 1),</code></span>
+                <span><code>        np.linspace(axis[2], axis[3], int((axis[3] - axis[2]) * 100)).reshape(-1, 1),</code></span>
+                <span><code>    )</code></span>
+                <span><code>    X_new = np.c_[x0.ravel(), x1.ravel()]</code></span>
+                <span><code></code></span>
+                <span><code>    y_predict = model.predict(X_new)</code></span>
+                <span><code>    zz = y_predict.reshape(x0.shape)</code></span>
+                <span><code></code></span>
+                <span><code>    from matplotlib.colors import ListedColormap</code></span>
+                <span><code>    custom_cmap = ListedColormap(['#EF9A9A', '#FFF59D', '#90CAF9'])</code></span>
+                <span><code></code></span>
+                <span><code>    plt.contourf(x0, x1, zz, cmap=custom_cmap)</code></span>
+                <span><code></code></span>
+                <span><code>plot_decision_boundary(bayes,axis=[1,7,1,8])</code></span>
+                <span><code>plt.scatter(point1_x, point1_y, c="red", label="class 1")</code></span>
+                <span><code>plt.scatter(point2_x, point2_y, c="black", label="class 2")</code></span>
+                <span><code>plt.legend()</code></span>
+                <span><code>plt.grid()</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div>Gaussian</div>
+            <div><img src="../static/Math/mathematicalModeling/133.png"></div>
+            <div>Bernoulli</div>
+            <div><img src="../static/Math/mathematicalModeling/134.png"></div>
+            <div>Multinomial</div>
+            <div><img src="../static/Math/mathematicalModeling/135.png"></div>
+            <div>Complement</div>
+            <div><img src="../static/Math/mathematicalModeling/136.png"></div>
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">LDA线性判断分析分类</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <div>线性判别分析是一种很重要的分类算法，同时也是一种降维方法（这个我还没想懂）。和PCA一样，LDA也是通过投影的方式达到去除数据之间冗余的一种算法。如下图所示的2类数据，为了正确的分类，我们希望这2类数据投影之后，同类的数据尽可能的集中（距离近，有重叠），不同类的数据尽可能的分开（距离远，无重叠），左图的投影不好，因为2类数据投影后有重叠，而右图投影之后可以很好地进行分类，因为投影之后的2类数据之间几乎没有重叠，只是类内重叠得很厉害，而这正是我们想要的结果。</div>
+            <div><img src="../static/Math/mathematicalModeling/137.png"></div>
+            <div><img src="../static/Math/mathematicalModeling/139.png"></div>
+            <div><img src="../static/Math/mathematicalModeling/140.png"></div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>导入数据</div>
+            <pre id="code_block">
+                <span><code>import matplotlib.pyplot as plt</code></span>
+                <span><code>import numpy as np</code></span>
+                <span><code>import pandas as pd</code></span>
+                <span><code></code></span>
+                <span><code>def points_within_circle(radius, center=(0, 0), number_of_points=100):</code></span>
+                <span><code>    center_x, center_y = center</code></span>
+                <span><code>    r = radius * np.sqrt(np.random.random((number_of_points,)))</code></span>
+                <span><code>    theta = np.random.random((number_of_points,)) * 2 * np.pi</code></span>
+                <span><code>    x = center_x + r * np.cos(theta)</code></span>
+                <span><code>    y = center_y + r * np.sin(theta)</code></span>
+                <span><code>    return x, y</code></span>
+                <span><code></code></span>
+                <span><code>X = np.arange(0, 8)</code></span>
+                <span><code>point1_x, point1_y = points_within_circle(2, (3, 5), 100)</code></span>
+                <span><code>point2_x, point2_y = points_within_circle(2, (5, 3), 100)</code></span>
+                <span><code>x = np.concatenate((point1_x,point2_x))</code></span>
+                <span><code>y = np.concatenate((point1_y,point2_y))</code></span>
+                <span><code>cls = np.array([0]*100+[1]*100)</code></span>
+                <span><code>df = pd.DataFrame({'x':x,'y':y,'target':cls})</code></span>
+            </pre>
+            <div>开始训练</div>
+            <pre id="code_block">
+                <span><code>from sklearn.discriminant_analysis import LinearDiscriminantAnalysis</code></span>
+                <span><code>from sklearn.model_selection import cross_val_score</code></span>
+                <span><code>lda = LinearDiscriminantAnalysis()</code></span>
+                <span><code>lda.fit(df[['x','y']].values,df['target'].values)</code></span>
+                <span><code>print(cross_val_score(lda,df[['x','y']].values,df['target'].values,cv=5).mean())</code></span>
+            </pre>
+            <div>结果如下：</div>
+            <div>accuracy 0.8800000000000001</div>
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>def plot_decision_boundary(model, axis):</code></span>
+                <span><code>    x0, x1 = np.meshgrid(</code></span>
+                <span><code>        np.linspace(axis[0], axis[1], int((axis[1] - axis[0]) * 100)).reshape(-1, 1),</code></span>
+                <span><code>        np.linspace(axis[2], axis[3], int((axis[3] - axis[2]) * 100)).reshape(-1, 1),</code></span>
+                <span><code>    )</code></span>
+                <span><code>    X_new = np.c_[x0.ravel(), x1.ravel()]</code></span>
+                <span><code></code></span>
+                <span><code>    y_predict = model.predict(X_new)</code></span>
+                <span><code>    zz = y_predict.reshape(x0.shape)</code></span>
+                <span><code></code></span>
+                <span><code>    from matplotlib.colors import ListedColormap</code></span>
+                <span><code>    custom_cmap = ListedColormap(['#EF9A9A', '#FFF59D', '#90CAF9'])</code></span>
+                <span><code></code></span>
+                <span><code>    plt.contourf(x0, x1, zz, cmap=custom_cmap)</code></span>
+                <span><code></code></span>
+                <span><code>plot_decision_boundary(lda,axis=[1,7,1,8])</code></span>
+                <span><code>plt.scatter(point1_x, point1_y, c="red", label="class 1")</code></span>
+                <span><code>plt.scatter(point2_x, point2_y, c="black", label="class 2")</code></span>
+                <span><code>plt.legend()</code></span>
+                <span><code>plt.grid()</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/138.png"></div>
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">QDA二次判别分析分类</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <div>见LDA</div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>导入数据</div>
+            <pre id="code_block">
+                <span><code>import matplotlib.pyplot as plt</code></span>
+                <span><code>import numpy as np</code></span>
+                <span><code>import pandas as pd</code></span>
+                <span><code></code></span>
+                <span><code>def points_within_circle(radius, center=(0, 0), number_of_points=100):</code></span>
+                <span><code>    center_x, center_y = center</code></span>
+                <span><code>    r = radius * np.sqrt(np.random.random((number_of_points,)))</code></span>
+                <span><code>    theta = np.random.random((number_of_points,)) * 2 * np.pi</code></span>
+                <span><code>    x = center_x + r * np.cos(theta)</code></span>
+                <span><code>    y = center_y + r * np.sin(theta)</code></span>
+                <span><code>    return x, y</code></span>
+                <span><code></code></span>
+                <span><code>X = np.arange(0, 8)</code></span>
+                <span><code>point1_x, point1_y = points_within_circle(2, (3, 5), 100)</code></span>
+                <span><code>point2_x, point2_y = points_within_circle(2, (5, 3), 100)</code></span>
+                <span><code>x = np.concatenate((point1_x,point2_x))</code></span>
+                <span><code>y = np.concatenate((point1_y,point2_y))</code></span>
+                <span><code>cls = np.array([0]*100+[1]*100)</code></span>
+                <span><code>df = pd.DataFrame({'x':x,'y':y,'target':cls})</code></span>
+            </pre>
+            <div>开始训练</div>
+            <pre id="code_block">
+                <span><code>from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis</code></span>
+                <span><code>from sklearn.model_selection import cross_val_score</code></span>
+                <span><code>qda = LinearDiscriminantAnalysis()</code></span>
+                <span><code>qda.fit(df[['x','y']].values,df['target'].values)</code></span>
+                <span><code>print(cross_val_score(qda,df[['x','y']].values,df['target'].values,cv=5).mean())</code></span>
+            </pre>
+            <div>结果如下：</div>
+            <div>accuracy 0.9049999999999999</div>
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>def plot_decision_boundary(model, axis):</code></span>
+                <span><code>    x0, x1 = np.meshgrid(</code></span>
+                <span><code>        np.linspace(axis[0], axis[1], int((axis[1] - axis[0]) * 100)).reshape(-1, 1),</code></span>
+                <span><code>        np.linspace(axis[2], axis[3], int((axis[3] - axis[2]) * 100)).reshape(-1, 1),</code></span>
+                <span><code>    )</code></span>
+                <span><code>    X_new = np.c_[x0.ravel(), x1.ravel()]</code></span>
+                <span><code></code></span>
+                <span><code>    y_predict = model.predict(X_new)</code></span>
+                <span><code>    zz = y_predict.reshape(x0.shape)</code></span>
+                <span><code></code></span>
+                <span><code>    from matplotlib.colors import ListedColormap</code></span>
+                <span><code>    custom_cmap = ListedColormap(['#EF9A9A', '#FFF59D', '#90CAF9'])</code></span>
+                <span><code></code></span>
+                <span><code>    plt.contourf(x0, x1, zz, cmap=custom_cmap)</code></span>
+                <span><code></code></span>
+                <span><code>plot_decision_boundary(qda,axis=[1,7,1,8])</code></span>
+                <span><code>plt.scatter(point1_x, point1_y, c="red", label="class 1")</code></span>
+                <span><code>plt.scatter(point2_x, point2_y, c="black", label="class 2")</code></span>
+                <span><code>plt.legend()</code></span>
+                <span><code>plt.grid()</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/142.png"></div>
+        </li>
+    </ol>
+
 </body>
 </html>
