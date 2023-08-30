@@ -4313,6 +4313,670 @@
             <div><img src="../static/Math/mathematicalModeling/142.png"></div>
         </li>
     </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">AP亲和力传播聚类</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <div>AP算法</div>
+            <div>AP算法的基本思想是将全部数据点都当作潜在的聚类中心(称之为exemplar)，然后数据点两两之间连线构成一个网络(相似度矩阵)，再通过网络中各条边的消息(responsibility和availability)传递计算出各样本的聚类中心。</div>
+            <div><img src="../static/Math/mathematicalModeling/143.png"></div>
+            <div><img src="../static/Math/mathematicalModeling/144.png"></div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>导入数据</div>
+            <pre id="code_block">
+                <span><code>from sklearn.datasets import make_classification</code></span>
+                <span><code>X, _ = make_classification(n_samples=1000, n_features=2, n_informative=2, n_redundant=0, n_clusters_per_class=1,random_state=4)</code></span>
+            </pre>
+            <div>开始训练</div>
+            <pre id="code_block">
+                <span><code>from sklearn.cluster import AffinityPropagation</code></span>
+                <span><code>model = AffinityPropagation(damping=0.9)</code></span>
+                <span><code>ap.fit(X)</code></span>
+                <span><code>label = ap.predict(X)</code></span>
+            </pre>
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>import numpy as np</code></span>
+                <span><code>import matplotlib.pyplot as plt</code></span>
+                <span><code>label_class = np.unique(label)</code></span>
+                <span><code>for label_ in label_class:</code></span>
+                <span><code>    plt.scatter(X[:, 0][label==label_], X[:, 1][label==label_])</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/145.png"></div>
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">AC层次聚类聚类</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <div>AC算法</div>
+            <div>层次聚类顾名思义就是按照某个层次对样本集进行聚类操作，这里的层次实际上指的就是某种距离定义。 层次聚类最终的目的是消减类别的数量，所以在行为上类似于树状图由叶节点逐步向根节点靠近的过程，这种行为过程又被称为“自底向上”。</div>
+            <div>更通俗的，层次聚类是将初始化的多个类簇看做树节点，每一步迭代，都是将两两相近的类簇合并成一个新的大类簇，如此反复，直至最终只剩一个类簇（根节点）。</div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>导入数据</div>
+            <pre id="code_block">
+                <span><code>from sklearn.datasets import make_classification</code></span>
+                <span><code>X, _ = make_classification(n_samples=1000, n_features=2, n_informative=2, n_redundant=0, n_clusters_per_class=1,random_state=4)</code></span>
+            </pre>
+            <div>开始训练</div>
+            <pre id="code_block">
+                <span><code>from sklearn.cluster import AgglomerativeClustering</code></span>
+                <span><code>model = AgglomerativeClustering(n_clusters=2)</code></span>
+                <span><code>label = ap.fit_predict(X)</code></span>
+            </pre>
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>import numpy as np</code></span>
+                <span><code>import matplotlib.pyplot as plt</code></span>
+                <span><code>label_class = np.unique(label)</code></span>
+                <span><code>for label_ in label_class:</code></span>
+                <span><code>    plt.scatter(X[:, 0][label==label_], X[:, 1][label==label_])</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/146.png"></div>
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">RIRCH利用层次方法的平衡迭代规约和聚类</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <div>RIRCH算法</div>
+            <div>BIRCH算法利用了一个树结构来帮助我们快速的聚类，这个树结构类似于平衡B+树，一般将它称之为聚类特征树(Clustering Feature Tree，简称CF Tree)。这颗树的每一个节点是由若干个聚类特征(Clustering Feature，简称CF)组成。</div>
+            <div>从下图我们可以看看聚类特征树是什么样子的：每个节点包括叶子节点都有若干个CF，而内部节点的CF有指向孩子节点的指针，所有的叶子节点用一个双向链表链接起来。</div>
+            <div><img src="../static/Math/mathematicalModeling/147.png"></div>
+            <div>算法介绍：</div>
+            <div>将所有的训练集样本建立了CF Tree，一个基本的BIRCH算法就完成了，对应的输出就是若干个CF节点，每个节点里的样本点就是一个聚类的簇。</div>
+            <div>也就是说BIRCH算法的主要过程，就是建立CF Tree的过程。</div>
+            <div>真实的BIRCH算法除了建立CF Tree来聚类，其实还有一些可选的算法步骤的，现在我们就来看看 BIRCH算法的流程。</div>
+            <ol type="i">
+                <li>将所有的样本依次读入，在内存中建立一颗CF Tree。</li>
+                <li>可选）将第一步建立的CF Tree进行筛选，去除一些异常CF节点，这些节点一般里面的样本点很少。对于一些超球体距离非常近的元组进行合并</li>
+                <li>（可选）利用其它的一些聚类算法比如K-Means对所有的CF元组进行聚类，得到一颗比较好的CF Tree.这一步的主要目的是消除由于样本读入顺序导致的不合理的树结构，以及一些由于节点CF个数限制导致的树结构分裂。</li>
+                <li>（可选）利用第三步生成的CF Tree的所有CF节点的质心，作为初始质心点，对所有的样本点按距离远近进行聚类。这样进一步减少了由于CF Tree的一些限制导致的聚类不合理的情况。</li>
+            </ol>
+            <div>从上面可以看出，BIRCH算法的关键就是步骤1，也就是CF Tree的生成，其他步骤都是为了优化最后的聚类结果。</div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>导入数据</div>
+            <pre id="code_block">
+                <span><code>from sklearn.datasets import make_classification</code></span>
+                <span><code>X, _ = make_classification(n_samples=1000, n_features=2, n_informative=2, n_redundant=0, n_clusters_per_class=1,random_state=4)</code></span>
+            </pre>
+            <div>开始训练</div>
+            <pre id="code_block">
+                <span><code>from sklearn.cluster import Birch</code></span>
+                <span><code>model = Birch(threshold=0.01, n_clusters=2)</code></span>
+                <span><code>label = ap.fit_predict(X)</code></span>
+            </pre>
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>import numpy as np</code></span>
+                <span><code>import matplotlib.pyplot as plt</code></span>
+                <span><code>label_class = np.unique(label)</code></span>
+                <span><code>for label_ in label_class:</code></span>
+                <span><code>    plt.scatter(X[:, 0][label==label_], X[:, 1][label==label_])</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/148.png"></div>
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">DBSCAN基于密度的噪声应用空间聚类</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <div>DBSCAN算法</div>
+            <div>让我们定义Epsilon和最小点、应用DBSCAN算法时需要的两个参数以及一些额外的参数。</div>
+            <ul type="disc">
+                <li>Epsilon (ɛ)：社区的最大半径。如果数据点的相互距离小于或等于指定的epsilon，那么它们将是同一类的。换句话说，它是DBSCAN用来确定两个点是否相似和属于同一类的距离。更大的epsilon将产生更大的簇(包含更多的数据点)，更小的epsilon将构建更小的簇。一般来说，我们喜欢较小的值是因为我们只需要很小一部分的数据点在彼此之间的距离内。但是如果太小，您会将集群分割的越来越小。</li>
+                <li>最小点(minPts)：在一个邻域的半径内minPts数的邻域被认为是一个簇。请记住，初始点包含在minPts中。一个较低的minPts帮助算法建立更多的集群与更多的噪声或离群值。较高的minPts将确保更健壮的集群，但如果集群太大，较小的集群将被合并到较大的集群中。</li>
+                <li>核心点:核心数据点在其近邻距离内至少有的最小的数据点个数。</li>
+                <li>边界点:边界数据点位于郊区，就像它们属于近邻点一样。(比如w/在epsilon距离内的核心点)，但需要小于minPts。</li>
+                <li>离群点:这些点不是近邻点，也不是边界点。这些点位于低密度地区。</li>
+            </ul>
+            <div><img src="../static/Math/mathematicalModeling/149.png"></div>
+            <div>算法介绍：</div>
+            <div>首先，选择一个在其半径内至少有minPts的随机点。然后对核心点的邻域内的每个点进行评估，以确定它是否在epsilon距离内有minPts (minPts包括点本身)。如果该点满足minPts标准，它将成为另一个核心点，集群将扩展。如果一个点不满足minPts标准，它成为边界点。随着过程的继续，算法开始发展成为核心点“a”是“b”的邻居，而“b”又是“c”的邻居，以此类推。当集群被边界点包围时，这个聚类簇已经搜索完全，因为在距离内没有更多的点。选择一个新的随机点，并重复该过程以识别下一个簇。</div>
+            <div><img src="../static/Math/mathematicalModeling/150.png"></div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>导入数据</div>
+            <pre id="code_block">
+                <span><code>from sklearn.datasets import make_classification</code></span>
+                <span><code>X, _ = make_classification(n_samples=1000, n_features=2, n_informative=2, n_redundant=0, n_clusters_per_class=1,random_state=4)</code></span>
+            </pre>
+            <div>开始训练</div>
+            <pre id="code_block">
+                <span><code>from sklearn.cluster import DBSCAN</code></span>
+                <span><code>model = DBSCAN(eps=0.30, min_samples=9)</code></span>
+                <span><code>label = ap.fit_predict(X)</code></span>
+            </pre>
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>import numpy as np</code></span>
+                <span><code>import matplotlib.pyplot as plt</code></span>
+                <span><code>label_class = np.unique(label)</code></span>
+                <span><code>for label_ in label_class:</code></span>
+                <span><code>    plt.scatter(X[:, 0][label==label_], X[:, 1][label==label_])</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/148.png"></div>
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">kMeans k均值聚类</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <div>KMeans算法</div>
+            <div><img src="../static/Math/mathematicalModeling/152.png"></div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>导入数据</div>
+            <pre id="code_block">
+                <span><code>from sklearn.datasets import make_classification</code></span>
+                <span><code>X, _ = make_classification(n_samples=1000, n_features=2, n_informative=2, n_redundant=0, n_clusters_per_class=1,random_state=4)</code></span>
+            </pre>
+            <div>开始训练</div>
+            <pre id="code_block">
+                <span><code>from sklearn.cluster import KMeans</code></span>
+                <span><code>model = KMeans(n_clusters=2)</code></span>
+                <span><code>label = ap.fit_predict(X)</code></span>
+            </pre>
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>import numpy as np</code></span>
+                <span><code>import matplotlib.pyplot as plt</code></span>
+                <span><code>label_class = np.unique(label)</code></span>
+                <span><code>for label_ in label_class:</code></span>
+                <span><code>    plt.scatter(X[:, 0][label==label_], X[:, 1][label==label_])</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/153.png"></div>
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">Mini-Batch-KMeans小批量k均值聚类</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <div>KMeans算法</div>
+            <div><img src="../static/Math/mathematicalModeling/154.png"></div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>导入数据</div>
+            <pre id="code_block">
+                <span><code>from sklearn.datasets import make_classification</code></span>
+                <span><code>X, _ = make_classification(n_samples=1000, n_features=2, n_informative=2, n_redundant=0, n_clusters_per_class=1,random_state=4)</code></span>
+            </pre>
+            <div>开始训练</div>
+            <pre id="code_block">
+                <span><code>from sklearn.cluster import MiniBatchKMeans</code></span>
+                <span><code>model = MiniBatchKMeans(n_clusters=2)</code></span>
+                <span><code>label = ap.fit_predict(X)</code></span>
+            </pre>
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>import numpy as np</code></span>
+                <span><code>import matplotlib.pyplot as plt</code></span>
+                <span><code>label_class = np.unique(label)</code></span>
+                <span><code>for label_ in label_class:</code></span>
+                <span><code>    plt.scatter(X[:, 0][label==label_], X[:, 1][label==label_])</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/155.png"></div>
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">MeanShift聚类</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <div>MeanShift算法</div>
+            <div><img src="../static/Math/mathematicalModeling/156.png"></div>
+            <div><img src="../static/Math/mathematicalModeling/157.png"></div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>导入数据</div>
+            <pre id="code_block">
+                <span><code>from sklearn.datasets import make_classification</code></span>
+                <span><code>X, _ = make_classification(n_samples=1000, n_features=2, n_informative=2, n_redundant=0, n_clusters_per_class=1,random_state=4)</code></span>
+            </pre>
+            <div>开始训练</div>
+            <pre id="code_block">
+                <span><code>from sklearn.cluster import MeanShift</code></span>
+                <span><code>model = MeanShift()</code></span>
+                <span><code>label = ap.fit_predict(X)</code></span>
+            </pre>
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>import numpy as np</code></span>
+                <span><code>import matplotlib.pyplot as plt</code></span>
+                <span><code>label_class = np.unique(label)</code></span>
+                <span><code>for label_ in label_class:</code></span>
+                <span><code>    plt.scatter(X[:, 0][label==label_], X[:, 1][label==label_])</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/158.png"></div>
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">OPTICS基于密度聚类</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <div>OPTICS算法</div>
+            <div>OPTICS是DBSCAN的泛化版，它将eps指定为一个范围，而非一个固定值。</div>
+            <div>这个算法不像其他算法，直接将数据切分成不同的块。它是给出了一个点的可达距离图像，然后从图像上，我们可以对数据进行切分聚类。</div>
+            <div>OPTICS（用于识别聚类结构的排序点）算法与 DBSCAN 算法有许多相似之处，可视为 DBSCAN 的泛化，将 eps 要求从单个值放宽到一个范围</div>
+            <div>DBSCAN 和 OPTICS 之间的主要区别在于，OPTICS 算法构建了一个可reachability graph，为每个样本分配一个reachability_距离，和在群集ordering_属性中的一个点; 这两个属性在拟合(fit)模型时分配，并用于确定cluster的成员</div>
+            <div>如果 OPTICS 在运行的时候把 max_eps 参数设置为默认值 inf，则可以用cluster_optics_dbscan方法对任何给定的eps值在线性时间重复执行 DBSCAN 样式群集提取。将max_eps设置为较低的值将导致较短的运行时间，并可视为每个点在查找其他潜在的可到达点时所采用的最大邻域半径。</div>
+            <div>这个算法不像其他算法，直接将数据切分成不同的块。它是给出了一个点的可达距离图像，然后从图像上，我们可以对数据进行切分聚类。</div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>导入数据</div>
+            <pre id="code_block">
+                <span><code>from sklearn.datasets import make_classification</code></span>
+                <span><code>X, _ = make_classification(n_samples=1000, n_features=2, n_informative=2, n_redundant=0, n_clusters_per_class=1,random_state=4)</code></span>
+            </pre>
+            <div>开始训练</div>
+            <pre id="code_block">
+                <span><code>from sklearn.cluster import OPTICS</code></span>
+                <span><code>model = OPTICS(eps=0.8, min_samples=10)</code></span>
+                <span><code>label = ap.fit_predict(X)</code></span>
+            </pre>
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>import numpy as np</code></span>
+                <span><code>import matplotlib.pyplot as plt</code></span>
+                <span><code>label_class = np.unique(label)</code></span>
+                <span><code>for label_ in label_class:</code></span>
+                <span><code>    plt.scatter(X[:, 0][label==label_], X[:, 1][label==label_])</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/159.png"></div>
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">光谱聚类</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <div>光谱聚类算法</div>
+            <div>自主查询</div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>导入数据</div>
+            <pre id="code_block">
+                <span><code>from sklearn.datasets import make_classification</code></span>
+                <span><code>X, _ = make_classification(n_samples=1000, n_features=2, n_informative=2, n_redundant=0, n_clusters_per_class=1,random_state=4)</code></span>
+            </pre>
+            <div>开始训练</div>
+            <pre id="code_block">
+                <span><code>from sklearn.cluster import SpectralClustering</code></span>
+                <span><code>model = SpectralClustering(n_clusters=2)</code></span>
+                <span><code>label = ap.fit_predict(X)</code></span>
+            </pre>
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>import numpy as np</code></span>
+                <span><code>import matplotlib.pyplot as plt</code></span>
+                <span><code>label_class = np.unique(label)</code></span>
+                <span><code>for label_ in label_class:</code></span>
+                <span><code>    plt.scatter(X[:, 0][label==label_], X[:, 1][label==label_])</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/160.png"></div>
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">高斯混合聚类</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <div>高斯混合算法</div>
+            <div>自主查询</div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>导入数据</div>
+            <pre id="code_block">
+                <span><code>from sklearn.datasets import make_classification</code></span>
+                <span><code>X, _ = make_classification(n_samples=1000, n_features=2, n_informative=2, n_redundant=0, n_clusters_per_class=1,random_state=4)</code></span>
+            </pre>
+            <div>开始训练</div>
+            <pre id="code_block">
+                <span><code>from sklearn.mixture import GaussianMixture</code></span>
+                <span><code>model = GaussianMixture(n_components=2)</code></span>
+                <span><code>label = ap.fit_predict(X)</code></span>
+            </pre>
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>import numpy as np</code></span>
+                <span><code>import matplotlib.pyplot as plt</code></span>
+                <span><code>label_class = np.unique(label)</code></span>
+                <span><code>for label_ in label_class:</code></span>
+                <span><code>    plt.scatter(X[:, 0][label==label_], X[:, 1][label==label_])</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/161.png"></div>
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">PCA主成分分析法降维</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <div>PCA算法</div>
+            <div>自主查询</div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>导入数据(后面的降维算法数据一致)</div>
+            <pre id="code_block">
+                <span><code>from sklearn.datasets import make_blobs</code></span>
+                <span><code>import matplotlib.pyplot as plt</code></span>
+                <span><code></code></span>
+                <span><code>X, y = make_blobs(n_samples=200, centers=2, n_features=3, random_state=42, cluster_std=4)</code></span>
+                <span><code>ax = plt.subplot(projection='3d')</code></span>
+                <span><code>ax.scatter(X[:, 0][y == 0], X[:, 1][y == 0], X[:, 2][y == 0], c='g', label='class1')</code></span>
+                <span><code>ax.scatter(X[:, 0][y == 1], X[:, 1][y == 1], X[:, 2][y == 1], c='r', label='class2')</code></span>
+                <span><code>ax.set_xlabel('X')</code></span>
+                <span><code>ax.set_ylabel('Y')</code></span>
+                <span><code>ax.set_zlabel('Z')</code></span>
+                <span><code>plt.legend()</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div>如图所示：</div>
+            <div><img src="../static/Math/mathematicalModeling/162.png"></div>
+            <div>开始训练</div>
+            <pre id="code_block">
+                <span><code>from sklearn.decomposition import PCA</code></span>
+                <span><code></code></span>
+                <span><code>model = PCA(n_components=2)</code></span>
+                <span><code>data = model.fit_transform(X)</code></span>
+            </pre>
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>plt.scatter(data[:, 0][y == 0], data[:, 1][y == 0], c='g', label='class1')</code></span>
+                <span><code>plt.scatter(data[:, 0][y == 1], data[:, 1][y == 1], c='r', label='class2')</code></span>
+                <span><code>ax.set_xlabel('X')</code></span>
+                <span><code>ax.set_ylabel('Y')</code></span>
+                <span><code>plt.legend()</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/163.png"></div>
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">IPCA增量主成分分析法降维</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <div>IPCA算法</div>
+            <div>自主查询</div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>开始训练</div>
+            <pre id="code_block">
+                <span><code>from sklearn.decomposition import IncrementalPCA</code></span>
+                <span><code></code></span>
+                <span><code>model = IncrementalPCA(n_components=2)</code></span>
+                <span><code>data = model.fit_transform(X)</code></span>
+            </pre>
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>plt.scatter(data[:, 0][y == 0], data[:, 1][y == 0], c='g', label='class1')</code></span>
+                <span><code>plt.scatter(data[:, 0][y == 1], data[:, 1][y == 1], c='r', label='class2')</code></span>
+                <span><code>ax.set_xlabel('X')</code></span>
+                <span><code>ax.set_ylabel('Y')</code></span>
+                <span><code>plt.legend()</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/164.png"></div>
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">KernelPCA核主成分分析法降维</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <div>KernelPCA算法</div>
+            <div>自主查询</div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>开始训练</div>
+            <pre id="code_block">
+                <span><code>from sklearn.decomposition import KernelPCA</code></span>
+                <span><code></code></span>
+                <span><code>model = KernelPCA(n_components=2)</code></span>
+                <span><code>data = model.fit_transform(X)</code></span>
+            </pre>
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>plt.scatter(data[:, 0][y == 0], data[:, 1][y == 0], c='g', label='class1')</code></span>
+                <span><code>plt.scatter(data[:, 0][y == 1], data[:, 1][y == 1], c='r', label='class2')</code></span>
+                <span><code>ax.set_xlabel('X')</code></span>
+                <span><code>ax.set_ylabel('Y')</code></span>
+                <span><code>plt.legend()</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/165.png"></div>
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">TruncatedSVD截断的SVD主成分分析法降维</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <div>TruncatedSVD算法</div>
+            <div>自主查询</div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>开始训练</div>
+            <pre id="code_block">
+                <span><code>from sklearn.decomposition import TruncatedSVD</code></span>
+                <span><code></code></span>
+                <span><code>model = TruncatedSVD(n_components=2)</code></span>
+                <span><code>data = model.fit_transform(X)</code></span>
+            </pre>
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>plt.scatter(data[:, 0][y == 0], data[:, 1][y == 0], c='g', label='class1')</code></span>
+                <span><code>plt.scatter(data[:, 0][y == 1], data[:, 1][y == 1], c='r', label='class2')</code></span>
+                <span><code>ax.set_xlabel('X')</code></span>
+                <span><code>ax.set_ylabel('Y')</code></span>
+                <span><code>plt.legend()</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/166.png"></div>
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">SparsePCA稀疏化的主成分分析法降维</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <div>SparsePCA算法</div>
+            <div>自主查询</div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>开始训练</div>
+            <pre id="code_block">
+                <span><code>from sklearn.decomposition import SparsePCA</code></span>
+                <span><code></code></span>
+                <span><code>model = SparsePCA(n_components=2)</code></span>
+                <span><code>data = model.fit_transform(X)</code></span>
+            </pre>
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>plt.scatter(data[:, 0][y == 0], data[:, 1][y == 0], c='g', label='class1')</code></span>
+                <span><code>plt.scatter(data[:, 0][y == 1], data[:, 1][y == 1], c='r', label='class2')</code></span>
+                <span><code>ax.set_xlabel('X')</code></span>
+                <span><code>ax.set_ylabel('Y')</code></span>
+                <span><code>plt.legend()</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/167.png"></div>
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">MiniBatchSparsePCA随机选择小批量的主成分分析法降维</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <div>MiniBatchSparsePCA算法</div>
+            <div>自主查询</div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>开始训练</div>
+            <pre id="code_block">
+                <span><code>from sklearn.decomposition import MiniBatchSparsePCA</code></span>
+                <span><code></code></span>
+                <span><code>model = MiniBatchSparsePCA(n_components=2)</code></span>
+                <span><code>data = model.fit_transform(X)</code></span>
+            </pre>
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>plt.scatter(data[:, 0][y == 0], data[:, 1][y == 0], c='g', label='class1')</code></span>
+                <span><code>plt.scatter(data[:, 0][y == 1], data[:, 1][y == 1], c='r', label='class2')</code></span>
+                <span><code>ax.set_xlabel('X')</code></span>
+                <span><code>ax.set_ylabel('Y')</code></span>
+                <span><code>plt.legend()</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/168.png"></div>
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">FactorAnalysis因子分析法降维</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <div>FactorAnalysis算法</div>
+            <div>自主查询</div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>开始训练</div>
+            <pre id="code_block">
+                <span><code>from sklearn.decomposition import FactorAnalysis</code></span>
+                <span><code></code></span>
+                <span><code>model = FactorAnalysis(n_components=2)</code></span>
+                <span><code>data = model.fit_transform(X)</code></span>
+            </pre>
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>plt.scatter(data[:, 0][y == 0], data[:, 1][y == 0], c='g', label='class1')</code></span>
+                <span><code>plt.scatter(data[:, 0][y == 1], data[:, 1][y == 1], c='r', label='class2')</code></span>
+                <span><code>ax.set_xlabel('X')</code></span>
+                <span><code>ax.set_ylabel('Y')</code></span>
+                <span><code>plt.legend()</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/169.png"></div>
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">FastICA独立成分分析法降维</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <div>FastICA算法</div>
+            <div>自主查询</div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>开始训练</div>
+            <pre id="code_block">
+                <span><code>from sklearn.decomposition import FastICA</code></span>
+                <span><code></code></span>
+                <span><code>model = FastICA(n_components=2)</code></span>
+                <span><code>data = model.fit_transform(X)</code></span>
+            </pre>
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>plt.scatter(data[:, 0][y == 0], data[:, 1][y == 0], c='g', label='class1')</code></span>
+                <span><code>plt.scatter(data[:, 0][y == 1], data[:, 1][y == 1], c='r', label='class2')</code></span>
+                <span><code>ax.set_xlabel('X')</code></span>
+                <span><code>ax.set_ylabel('Y')</code></span>
+                <span><code>plt.legend()</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/170.png"></div>
+        </li>
+    </ol>
+    <div class="tit">
+        <span style="color:red;font-size:40px;">NMF非负矩阵分解降维</span>
+    </div>
+    <ol type="I">
+        <li>
+            <div>原理讲解</div>
+            <div>NMF算法</div>
+            <div>自主查询</div>
+        </li>
+        <li>
+            <div>代码实现</div>
+            <div>开始训练</div>
+            <pre id="code_block">
+                <span><code>from sklearn.decomposition import NMF</code></span>
+                <span><code>from sklearn.preprocessing import MinMaxScaler</code></span>
+                <span><code></code></span>
+                <span><code>mms = MinMaxScaler()</code></span>
+                <span><code>X = mms.fit_transform(X)</code></span>
+                <span><code>model = NMF(n_components=2,max_iter=1000)</code></span>
+                <span><code>data = model.fit_transform(X)</code></span>
+            </pre>
+            <div>可视化</div>
+            <pre id="code_block">
+                <span><code>plt.scatter(data[:, 0][y == 0], data[:, 1][y == 0], c='g', label='class1')</code></span>
+                <span><code>plt.scatter(data[:, 0][y == 1], data[:, 1][y == 1], c='r', label='class2')</code></span>
+                <span><code>ax.set_xlabel('X')</code></span>
+                <span><code>ax.set_ylabel('Y')</code></span>
+                <span><code>plt.legend()</code></span>
+                <span><code>plt.show()</code></span>
+            </pre>
+            <div><img src="../static/Math/mathematicalModeling/171.png"></div>
+        </li>
+    </ol>
 
 </body>
 </html>
